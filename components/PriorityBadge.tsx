@@ -6,7 +6,7 @@ export default function PriorityBadge({ priority }: { priority: Priority }) {
 
   if (priority === '緊急') {
     return (
-      <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest rounded-lg px-2 py-1 bg-red-50 text-red-500">
+      <span className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-red-100 text-red-500">
         <AlertTriangle className="w-3 h-3" />
         緊急
       </span>
@@ -14,7 +14,7 @@ export default function PriorityBadge({ priority }: { priority: Priority }) {
   }
 
   return (
-    <span className="flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest rounded-lg px-2 py-1 bg-amber-50 text-amber-500">
+    <span className="flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full bg-orange-100 text-orange-500">
       <Info className="w-3 h-3" />
       急件
     </span>
