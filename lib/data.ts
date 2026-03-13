@@ -407,25 +407,27 @@ export const TRAVEL_INFO: TravelInfo[] = [
   { minutes: 18, km: 12.4 },
 ];
 
-export interface MaterialItem {
+// 每筆記錄代表一次「領料」或「使用」動作
+// qty > 0 = 從倉庫領料；qty < 0 = 用於工單
+export interface MaterialTransaction {
   id: string;
-  partNo: string;    // 料號
-  name: string;      // 品名
-  unit: string;      // 單位
-  received: number;  // 已領數量
-  used: number;      // 已使用數量
-  // remaining = received - used
+  name: string;       // 品名
+  unit: string;       // 單位
+  qty: number;        // +正數 = 領料, -負數 = 使用
+  timeLabel: string;  // 顯示用時間（如 "09:15 AM" / "昨天"）
+  date: string;       // YYYY-MM-DD
 }
 
-export const MATERIALS: MaterialItem[] = [
-  { id: 'm01', partNo: 'F-PP5-STD', name: '5吋 PP 棉濾芯',       unit: '支', received: 10, used: 7 },
-  { id: 'm02', partNo: 'F-AC1-STD', name: '1吋活性碳濾芯',       unit: '支', received: 8,  used: 8 },
-  { id: 'm03', partNo: 'F-RO-75G',  name: 'RO 逆滲透膜 75G',     unit: '片', received: 3,  used: 1 },
-  { id: 'm04', partNo: 'V-INL-12V', name: '進水電磁閥 DC12V',    unit: '個', received: 2,  used: 1 },
-  { id: 'm05', partNo: 'C-CLM-M6',  name: '出水止水夾 M6',       unit: '個', received: 5,  used: 3 },
-  { id: 'm06', partNo: 'O-RNG-LG',  name: 'O 型環 (大)',         unit: '個', received: 20, used: 15 },
-  { id: 'm07', partNo: 'T-DRN-CON', name: '排水管接頭',          unit: '個', received: 10, used: 4 },
-  { id: 'm08', partNo: 'H-ELM-STD', name: '加熱管（標準型）',     unit: '支', received: 3,  used: 3 },
-  { id: 'm09', partNo: 'T-PRE-2L',  name: '壓力桶 2L',           unit: '顆', received: 2,  used: 0 },
-  { id: 'm10', partNo: 'F-QCN-1/4', name: '快拆接頭 1/4"',       unit: '個', received: 15, used: 6 },
+export const MATERIAL_TRANSACTIONS: MaterialTransaction[] = [
+  // 今日 領料
+  { id: 'mt01', name: 'PP 棉濾芯 5吋',     unit: '支', qty: +5, timeLabel: '08:30 AM', date: TODAY },
+  { id: 'mt02', name: '活性碳濾芯 (CTO)',  unit: '支', qty: +3, timeLabel: '08:30 AM', date: TODAY },
+  // 今日 使用（活性碳用了5但只領3 → 欠2；RO膜沒領就用 → 欠1）
+  { id: 'mt03', name: 'PP 棉濾芯 5吋',     unit: '支', qty: -2, timeLabel: '10:00 AM', date: TODAY },
+  { id: 'mt04', name: '活性碳濾芯 (CTO)',  unit: '支', qty: -5, timeLabel: '11:30 AM', date: TODAY },
+  { id: 'mt05', name: 'RO 逆滲透膜 75G',  unit: '片', qty: -1, timeLabel: '12:15 PM', date: TODAY },
+  // 昨天
+  { id: 'mt06', name: '進水電磁閥 DC12V', unit: '組', qty: +1, timeLabel: '昨天',      date: '2026-03-03' },
+  { id: 'mt07', name: 'O 型環 (大)',       unit: '個', qty: +6, timeLabel: '昨天',      date: '2026-03-03' },
+  { id: 'mt08', name: 'O 型環 (大)',       unit: '個', qty: -4, timeLabel: '昨天',      date: '2026-03-03' },
 ];
