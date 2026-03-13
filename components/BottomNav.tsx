@@ -7,7 +7,7 @@ import { Calendar, ClipboardList, Package } from 'lucide-react';
 const tabs = [
   { href: '/recent',  label: '任務清單', Icon: Calendar },
   { href: '/',        label: '今日派工', Icon: ClipboardList },
-  { href: '/profile', label: '領退料', Icon: Package },
+  { href: '/profile', label: '餘料管理', Icon: Package },
 ];
 
 export default function BottomNav() {

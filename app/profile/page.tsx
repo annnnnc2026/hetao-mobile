@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ArrowUpRight, ArrowDownLeft, Package } from 'lucide-react';
+import { ArrowUpRight, Package } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import { TECHNICIAN_NAME, MATERIAL_TRANSACTIONS, TODAY, type MaterialType } from '@/lib/data';
 
@@ -52,7 +52,7 @@ export default function MaterialsPage() {
 
         {/* Header */}
         <div className="px-5 pt-12 pb-4 flex items-center justify-between">
-          <h1 className="text-lg font-bold text-gray-900">領退料管理</h1>
+          <h1 className="text-lg font-bold text-gray-900">餘料管理</h1>
           <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center">
             <span className="text-xs font-bold text-white">
               {TECHNICIAN_NAME.slice(0, 2).toUpperCase()}
@@ -60,19 +60,13 @@ export default function MaterialsPage() {
           </div>
         </div>
 
-        {/* Action buttons */}
-        <div className="px-5 grid grid-cols-2 gap-3 mb-5">
-          <button className="bg-gray-900 rounded-2xl p-5 flex flex-col items-start gap-6 active:scale-95 transition-transform">
-            <div className="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center">
-              <ArrowUpRight className="w-5 h-5 text-white" />
-            </div>
+        {/* Action button */}
+        <div className="px-5 mb-5">
+          <button className="w-full bg-gray-900 rounded-2xl px-5 py-4 flex items-center justify-between active:scale-[0.98] transition-transform">
             <span className="text-sm font-semibold text-white">領料申請</span>
-          </button>
-          <button className="bg-white rounded-2xl p-5 flex flex-col items-start gap-6 border border-gray-100 shadow-sm active:scale-95 transition-transform">
-            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center">
-              <ArrowDownLeft className="w-5 h-5 text-gray-500" />
+            <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center">
+              <ArrowUpRight className="w-4 h-4 text-white" />
             </div>
-            <span className="text-sm font-semibold text-gray-700">退料入庫</span>
           </button>
         </div>
 
