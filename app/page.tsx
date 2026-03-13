@@ -97,7 +97,7 @@ export default function TodayPage() {
           ))}
         </div>
 
-        <div className="px-5">
+        <div className="px-5 flex flex-col gap-4">
           {filteredOrders.length === 0 ? (
             <div className="py-16 text-center text-gray-400 text-sm">
               沒有符合條件的工單
@@ -108,10 +108,10 @@ export default function TodayPage() {
               const travel = TRAVEL_INFO[originalIdx];
               const isLast = idx === filteredOrders.length - 1;
               return (
-                <div key={order.id} className={!isLast ? 'mb-4' : ''}>
+                <div key={order.id}>
                   <OrderCard order={order} />
                   {!isLast && travel && showTravelInfo && (
-                    <div className="flex items-center gap-3 pt-4 pb-0">
+                    <div className="flex items-center gap-3 pt-4">
                       <div className="flex-1 h-px bg-gray-200" />
                       <span className="flex items-center gap-1 text-xs text-gray-400 shrink-0">
                         <Navigation className="w-3 h-3" />
