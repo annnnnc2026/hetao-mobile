@@ -49,23 +49,6 @@ export default function TodayPage() {
           <p className="text-sm text-gray-400 mt-0.5">{TECHNICIAN_NAME} · {totalCount} 筆工單</p>
         </div>
 
-        {/* Quick dashboard */}
-        <div className="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <div className="grid grid-cols-3 divide-x divide-gray-100">
-            <div className="flex flex-col items-center gap-0.5 pr-4">
-              <span className="text-2xl font-bold text-gray-900 tabular-nums">{totalDevices}</span>
-              <span className="text-xs text-gray-400">設備總數</span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5 px-4">
-              <span className="text-2xl font-bold text-green-500 tabular-nums">{completedCount}</span>
-              <span className="text-xs text-gray-400">今日已完工</span>
-            </div>
-            <div className="flex flex-col items-center gap-0.5 pl-4">
-              <span className="text-2xl font-bold text-amber-500 tabular-nums">{pendingCount}</span>
-              <span className="text-xs text-gray-400">今日待處理</span>
-            </div>
-          </div>
-        </div>
 
         <div className="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex justify-between items-center mb-2.5">
