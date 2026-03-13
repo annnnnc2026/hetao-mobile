@@ -129,7 +129,7 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const order = getOrderById(id);
   if (!order) notFound();
 
-  const [sheet, setSheet] = useState<'none' | 'delay' | 'transfer' | 'complete'>('none');
+  const [sheet, setSheet] = useState<'none' | 'arrived' | 'delay' | 'transfer' | 'complete'>('none');
 
   // Delay form
   const [delayReason, setDelayReason] = useState('');
@@ -263,10 +263,27 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       {/* ─── Bottom CTA ──────────────────────────────────────────────── */}
       {order.status === '已指派' && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto">
-          <button className="w-full bg-blue-600 text-white py-4 text-base font-semibold flex items-center justify-center gap-2">
-            <MapPin className="w-5 h-5" />
+        <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto flex border-t border-gray-200">
+          <button
+            onClick={() => setSheet('delay')}
+            className="flex-1 bg-white text-gray-700 py-4 text-sm font-semibold flex items-center justify-center gap-1.5"
+          >
+            <Timer className="w-4 h-4" />
+            延期
+          </button>
+          <button
+            onClick={() => setSheet('arrived')}
+            className="flex-[2] bg-blue-600 text-white py-4 text-sm font-semibold flex items-center justify-center gap-2"
+          >
+            <MapPin className="w-4 h-4" />
             到達現場
+          </button>
+          <button
+            onClick={() => setSheet('transfer')}
+            className="flex-1 bg-white text-gray-700 py-4 text-sm font-semibold flex items-center justify-center gap-1.5"
+          >
+            <RotateCcw className="w-4 h-4" />
+            轉派
           </button>
         </div>
       )}
@@ -295,6 +312,34 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             完成工單
           </button>
         </div>
+      )}
+
+      {/* ─── Arrived popup ───────────────────────────────────────────── */}
+      {sheet === 'arrived' && (
+        <>
+          <div className="fixed inset-0 bg-black/40 z-40" onClick={() => setSheet('none')} />
+          <div className="fixed inset-0 flex items-center justify-center z-50 px-8">
+            <div className="bg-white rounded-2xl p-6 w-full shadow-xl">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-base font-bold text-gray-900">已到達現場</h3>
+                <button onClick={() => setSheet('none')} className="text-gray-400">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl mb-6">
+                <MapPin className="w-5 h-5 text-blue-500 shrink-0" />
+                <p className="text-sm text-blue-700 font-medium">{order.address}</p>
+              </div>
+              <button
+                onClick={() => setSheet('complete')}
+                className="w-full py-3.5 rounded-xl text-sm font-semibold bg-green-500 text-white flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                完成工單
+              </button>
+            </div>
+          </div>
+        </>
       )}
 
       {/* ─── Delay sheet ─────────────────────────────────────────────── */}
