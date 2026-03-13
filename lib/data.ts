@@ -6,7 +6,7 @@ export type PaymentMethod = '月結' | '現金' | '信用卡' | '匯款';
 
 export interface WorkOrder {
   id: string;             // display ID, e.g. WO-20260304-0001
-  erpNo: string;          // ERP system number
+  erpNo: string;          // ERP system number / 機號
   status: OrderStatus;
   priority: Priority;
   date: string;           // YYYY-MM-DD
@@ -20,6 +20,9 @@ export interface WorkOrder {
   address: string;
   contactName: string;
   phone: string;
+  // location detail (commercial clients)
+  locationBuilding?: string | null;  // e.g. 長榮飯店H棟
+  locationFloor?: string | null;     // e.g. 3F 洗手間右側
   // dispatch
   assignedBy: string;
   technician: string;
@@ -64,6 +67,8 @@ export const ALL_ORDERS: WorkOrder[] = [
     address: '新竹縣竹北市台元街32號3樓',
     contactName: '陳小姐',
     phone: '03-550-1234',
+    locationBuilding: '台元科技園區B棟',
+    locationFloor: '3F 茶水間右側',
     assignedBy: '林伯典',
     technician: TECHNICIAN_NAME,
     durationHours: 1,

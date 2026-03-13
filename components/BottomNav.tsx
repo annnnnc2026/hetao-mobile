@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Calendar, ClipboardList, User } from 'lucide-react';
 
 const tabs = [
-  { href: '/recent',  label: '近期派工', Icon: Calendar },
+  { href: '/recent',  label: '任務清單', Icon: Calendar },
   { href: '/',        label: '今日派工', Icon: ClipboardList },
   { href: '/profile', label: '我的',     Icon: User },
 ];
