@@ -91,6 +91,38 @@ export default function MaterialsPage() {
           </div>
         </div>
 
+        {/* Today's received list */}
+        <div className="px-5 mb-5">
+          <p className="text-sm font-semibold text-gray-900 mb-3">本日領料清單</p>
+          {todayTx.filter((t) => t.type === '領料').length === 0 ? (
+            <p className="text-xs text-gray-400 text-center py-4">今日尚未領料</p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {todayTx.filter((t) => t.type === '領料').map((t) => {
+                const balance = balanceMap.get(t.materialNo) ?? 0;
+                const isDeficit = balance > 0;
+                return (
+                  <div key={t.id} className="bg-white rounded-2xl px-4 py-3 shadow-sm border border-gray-100 flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isDeficit ? 'bg-red-50' : 'bg-orange-50'}`}>
+                      <Package className={`w-4 h-4 ${isDeficit ? 'text-red-400' : 'text-orange-400'}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{t.name}</p>
+                      <p className="text-xs text-gray-400">{t.materialNo}</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <p className="text-sm font-bold tabular-nums text-emerald-500">+{t.qty} {t.unit}</p>
+                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${isDeficit ? 'bg-red-50 text-red-500' : 'bg-orange-50 text-orange-500'}`}>
+                        {isDeficit ? '欠料' : '消料'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
         {/* Records */}
         <div className="px-5">
           <div className="flex items-center justify-between mb-3">
