@@ -407,27 +407,30 @@ export const TRAVEL_INFO: TravelInfo[] = [
   { minutes: 18, km: 12.4 },
 ];
 
-// 每筆記錄代表一次「領料」或「使用」動作
-// qty > 0 = 從倉庫領料；qty < 0 = 用於工單
+export type MaterialType = '領料' | '退料' | '消料';
+
 export interface MaterialTransaction {
   id: string;
-  name: string;       // 品名
-  unit: string;       // 單位
-  qty: number;        // +正數 = 領料, -負數 = 使用
-  timeLabel: string;  // 顯示用時間（如 "09:15 AM" / "昨天"）
-  date: string;       // YYYY-MM-DD
+  materialNo: string;  // 料號
+  name: string;        // 品名規格
+  machineNo: string;   // 機號（消料時填寫）
+  unit: string;        // 單位
+  qty: number;         // +正數 = 領料/退料, -負數 = 消料
+  type: MaterialType;  // 領料 | 退料 | 消料
+  timeLabel: string;   // 顯示用時間（如 "09:15 AM" / "昨天"）
+  date: string;        // YYYY-MM-DD
 }
 
 export const MATERIAL_TRANSACTIONS: MaterialTransaction[] = [
-  // 今日 領料
-  { id: 'mt01', name: 'PP 棉濾芯 5吋',     unit: '支', qty: +5, timeLabel: '08:30 AM', date: TODAY },
-  { id: 'mt02', name: '活性碳濾芯 (CTO)',  unit: '支', qty: +3, timeLabel: '08:30 AM', date: TODAY },
-  // 今日 使用（活性碳用了5但只領3 → 欠2；RO膜沒領就用 → 欠1）
-  { id: 'mt03', name: 'PP 棉濾芯 5吋',     unit: '支', qty: -2, timeLabel: '10:00 AM', date: TODAY },
-  { id: 'mt04', name: '活性碳濾芯 (CTO)',  unit: '支', qty: -5, timeLabel: '11:30 AM', date: TODAY },
-  { id: 'mt05', name: 'RO 逆滲透膜 75G',  unit: '片', qty: -1, timeLabel: '12:15 PM', date: TODAY },
+  // 今日
+  { id: 'mt01', materialNo: 'F-PP5',   name: 'PP 棉濾芯 5吋',     machineNo: '',        unit: '支', qty: +5, type: '領料', timeLabel: '08:30 AM', date: TODAY },
+  { id: 'mt02', materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)',  machineNo: '',        unit: '支', qty: +3, type: '領料', timeLabel: '08:30 AM', date: TODAY },
+  { id: 'mt03', materialNo: 'F-PP5',   name: 'PP 棉濾芯 5吋',     machineNo: 'B3-0017', unit: '支', qty: -2, type: '消料', timeLabel: '10:00 AM', date: TODAY },
+  { id: 'mt04', materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)',  machineNo: 'B3-0017', unit: '支', qty: -5, type: '消料', timeLabel: '11:30 AM', date: TODAY },
+  { id: 'mt05', materialNo: 'F-RO75',  name: 'RO 逆滲透膜 75G',  machineNo: 'B3-0017', unit: '片', qty: -1, type: '消料', timeLabel: '12:15 PM', date: TODAY },
   // 昨天
-  { id: 'mt06', name: '進水電磁閥 DC12V', unit: '組', qty: +1, timeLabel: '昨天',      date: '2026-03-03' },
-  { id: 'mt07', name: 'O 型環 (大)',       unit: '個', qty: +6, timeLabel: '昨天',      date: '2026-03-03' },
-  { id: 'mt08', name: 'O 型環 (大)',       unit: '個', qty: -4, timeLabel: '昨天',      date: '2026-03-03' },
+  { id: 'mt06', materialNo: 'P-EMV12', name: '進水電磁閥 DC12V', machineNo: '',        unit: '組', qty: +1, type: '領料', timeLabel: '昨天',      date: '2026-03-03' },
+  { id: 'mt07', materialNo: 'P-OR-L',  name: 'O 型環 (大)',       machineNo: '',        unit: '個', qty: +6, type: '領料', timeLabel: '昨天',      date: '2026-03-03' },
+  { id: 'mt08', materialNo: 'P-OR-L',  name: 'O 型環 (大)',       machineNo: 'H2-0051', unit: '個', qty: -4, type: '消料', timeLabel: '昨天',      date: '2026-03-03' },
+  { id: 'mt09', materialNo: 'P-EMV12', name: '進水電磁閥 DC12V', machineNo: 'H2-0051', unit: '組', qty: -1, type: '退料', timeLabel: '昨天',      date: '2026-03-03' },
 ];
