@@ -3,7 +3,9 @@
 import { useState, useMemo } from 'react';
 import { ArrowUpRight, Package } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
-import { TECHNICIAN_NAME, MATERIAL_TRANSACTIONS, TODAY, type MaterialType } from '@/lib/data';
+import { TECHNICIAN_NAME, MATERIAL_TRANSACTIONS, TODAY } from '@/lib/data';
+
+type DisplayStatus = '領料' | '消料' | '欠料' | '退料';
 
 // Group transactions by date, sorted newest first
 function groupByDate(txs: typeof MATERIAL_TRANSACTIONS) {
@@ -22,10 +24,11 @@ function dateLabel(date: string): string {
   return `${d.getMonth() + 1}/${d.getDate()}`;
 }
 
-const TYPE_STYLE: Record<MaterialType, { tag: string; icon: string; qty: string }> = {
+const STATUS_STYLE: Record<DisplayStatus, { tag: string; icon: string; qty: string }> = {
   領料: { tag: 'bg-emerald-50 text-emerald-600', icon: 'bg-emerald-50 text-emerald-500', qty: 'text-emerald-500' },
-  退料: { tag: 'bg-blue-50 text-blue-600',       icon: 'bg-blue-50 text-blue-500',       qty: 'text-blue-500'   },
+  欠料: { tag: 'bg-red-50 text-red-500',         icon: 'bg-red-50 text-red-400',         qty: 'text-emerald-500' },
   消料: { tag: 'bg-orange-50 text-orange-500',   icon: 'bg-orange-50 text-orange-400',   qty: 'text-orange-500' },
+  退料: { tag: 'bg-blue-50 text-blue-600',       icon: 'bg-blue-50 text-blue-500',       qty: 'text-blue-500'   },
 };
 
 export default function MaterialsPage() {
@@ -108,9 +111,13 @@ export default function MaterialsPage() {
                   <p className="text-xs font-semibold text-gray-400 mb-2.5">{dateLabel(date)}</p>
                   <div className="flex flex-col gap-3">
                     {[...items].reverse().map((t) => {
-                      const style = TYPE_STYLE[t.type];
+                      const balance = balanceMap.get(t.materialNo) ?? 0;
+                      const status: DisplayStatus =
+                        t.type === '退料' ? '退料' :
+                        t.type === '消料' ? '消料' :
+                        balance > 0       ? '欠料' : '領料';
+                      const style = STATUS_STYLE[status];
                       const qtyLabel = t.qty > 0 ? `+${t.qty}` : `${t.qty}`;
-                      const isDeficit = t.type === '領料' && (balanceMap.get(t.materialNo) ?? 0) > 0;
                       return (
                         <div
                           key={t.id}
@@ -133,21 +140,14 @@ export default function MaterialsPage() {
                               )}
                             </div>
                           </div>
-                          {/* Right: qty + tags */}
+                          {/* Right: qty + tag */}
                           <div className="flex flex-col items-end gap-1 shrink-0">
                             <p className={`text-base font-bold tabular-nums ${style.qty}`}>
                               {qtyLabel} {t.unit}
                             </p>
-                            <div className="flex items-center gap-1">
-                              {isDeficit && (
-                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-red-50 text-red-500">
-                                  欠料
-                                </span>
-                              )}
-                              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${style.tag}`}>
-                                {t.type}
-                              </span>
-                            </div>
+                            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${style.tag}`}>
+                              {status}
+                            </span>
                           </div>
                         </div>
                       );
