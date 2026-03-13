@@ -263,50 +263,50 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
       {/* ─── Bottom CTA ──────────────────────────────────────────────── */}
       {order.status === '已指派' && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto flex border-t border-gray-200">
+        <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto bg-white border-t border-gray-100 px-4 pt-3 pb-7 flex gap-2">
           <button
             onClick={() => setSheet('delay')}
-            className="flex-1 bg-white text-gray-700 py-4 text-sm font-semibold flex items-center justify-center gap-1.5"
+            className="flex-1 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 flex items-center justify-center gap-1.5"
           >
             <Timer className="w-4 h-4" />
             延期
           </button>
           <button
-            onClick={() => setSheet('arrived')}
-            className="flex-[2] bg-blue-600 text-white py-4 text-sm font-semibold flex items-center justify-center gap-2"
-          >
-            <MapPin className="w-4 h-4" />
-            到達現場
-          </button>
-          <button
             onClick={() => setSheet('transfer')}
-            className="flex-1 bg-white text-gray-700 py-4 text-sm font-semibold flex items-center justify-center gap-1.5"
+            className="flex-1 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 flex items-center justify-center gap-1.5"
           >
             <RotateCcw className="w-4 h-4" />
             轉派
+          </button>
+          <button
+            onClick={() => setSheet('arrived')}
+            className="flex-[2] py-3.5 rounded-2xl bg-blue-600 text-white text-sm font-semibold flex items-center justify-center gap-2"
+          >
+            <MapPin className="w-4 h-4" />
+            到達現場
           </button>
         </div>
       )}
 
       {order.status === '進行中' && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto flex">
+        <div className="fixed bottom-0 left-0 right-0 z-30 max-w-md mx-auto bg-white border-t border-gray-100 px-4 pt-3 pb-7 flex gap-2">
           <button
             onClick={() => setSheet('delay')}
-            className="flex-1 bg-white text-gray-700 py-4 text-sm font-semibold flex items-center justify-center gap-1.5 border-t border-gray-200"
+            className="flex-1 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 flex items-center justify-center gap-1.5"
           >
             <Timer className="w-4 h-4" />
             延期
           </button>
           <button
             onClick={() => setSheet('transfer')}
-            className="flex-1 bg-white text-gray-700 py-4 text-sm font-semibold flex items-center justify-center gap-1.5 border-t border-l border-gray-200"
+            className="flex-1 py-3.5 rounded-2xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 flex items-center justify-center gap-1.5"
           >
             <RotateCcw className="w-4 h-4" />
             轉派
           </button>
           <button
             onClick={() => setSheet('complete')}
-            className="flex-1 bg-green-500 text-white py-4 text-sm font-semibold flex items-center justify-center gap-1.5"
+            className="flex-[2] py-3.5 rounded-2xl bg-green-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5"
           >
             <CheckCircle2 className="w-4 h-4" />
             完成工單
