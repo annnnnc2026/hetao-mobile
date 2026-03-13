@@ -20,6 +20,8 @@ export default function TodayPage() {
 
   const todayOrders = getOrdersByDate(TODAY);
   const completedCount = todayOrders.filter((o) => o.status === '已完成').length;
+  const pendingCount = todayOrders.filter((o) => o.status === '已指派' || o.status === '進行中').length;
+  const totalDevices = todayOrders.reduce((sum, o) => sum + o.deviceCount, 0);
   const totalCount = todayOrders.length;
   const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
 
@@ -45,6 +47,24 @@ export default function TodayPage() {
         <div className="px-5 pt-12 pb-4">
           <h1 className="text-3xl font-bold text-gray-900">今日任務</h1>
           <p className="text-sm text-gray-400 mt-0.5">{TECHNICIAN_NAME} · {totalCount} 筆工單</p>
+        </div>
+
+        {/* Quick dashboard */}
+        <div className="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
+            <div className="flex flex-col items-center gap-0.5 pr-4">
+              <span className="text-2xl font-bold text-gray-900 tabular-nums">{totalDevices}</span>
+              <span className="text-xs text-gray-400">設備總數</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5 px-4">
+              <span className="text-2xl font-bold text-green-500 tabular-nums">{completedCount}</span>
+              <span className="text-xs text-gray-400">今日已完工</span>
+            </div>
+            <div className="flex flex-col items-center gap-0.5 pl-4">
+              <span className="text-2xl font-bold text-amber-500 tabular-nums">{pendingCount}</span>
+              <span className="text-xs text-gray-400">今日待處理</span>
+            </div>
+          </div>
         </div>
 
         <div className="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">

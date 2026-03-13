@@ -7,7 +7,7 @@ import {
   User, Tag, AlertCircle, Wrench, FileText, DollarSign,
   CalendarDays, Clock, Radio, MapPin, Camera, X,
   CheckCircle2, RotateCcw, Timer, ClipboardList, Truck, Package,
-  History,
+  History, Hash, PenLine, Download, QrCode,
 } from 'lucide-react';
 import { getOrderById, MachineBuilding, MachineFloor } from '@/lib/data';
 import StatusBadge from '@/components/StatusBadge';
@@ -85,7 +85,7 @@ function TabBar({ active, onChange }: { active: TabKey; onChange: (t: TabKey) =>
   const tabs: { key: TabKey; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
     { key: 'maintenance', label: '保養卡資訊', Icon: ClipboardList },
     { key: 'delivery',    label: '送貨單',    Icon: Truck },
-    { key: 'parts',       label: '用料清單',  Icon: Package },
+    { key: 'parts',       label: '領進料',    Icon: Package },
   ];
   return (
     <div className="bg-gray-100 rounded-2xl p-1 flex gap-1 mb-3">
@@ -152,6 +152,16 @@ function PillGroup({ label, options, value, onChange }: {
   );
 }
 
+// ─── Delivery mock data ───────────────────────────────────────────────────────
+const DELIVERY_PARTS = [
+  { name: '活性碳濾芯 (CTO)', spec: '10 吋標準型', qty: 1, price: 450 },
+  { name: 'PP 纖維濾芯 5u',   spec: '10 吋標準型', qty: 1, price: 150 },
+];
+const DELIVERY_TAX_RATE = 0.05;
+const DELIVERY_SUBTOTAL = DELIVERY_PARTS.reduce((s, p) => s + p.price * p.qty, 0);
+const DELIVERY_TAX = Math.round(DELIVERY_SUBTOTAL * DELIVERY_TAX_RATE);
+const DELIVERY_TOTAL = DELIVERY_SUBTOTAL + DELIVERY_TAX;
+
 // ─── Notification dot ─────────────────────────────────────────────────────────
 function NotifDot() {
   return (
@@ -190,6 +200,9 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
   const [completeResult, setCompleteResult] = useState('');
   const [completeNote, setCompleteNote] = useState('');
   const [actualHours, setActualHours] = useState('0.5');
+
+  // Delivery tab
+  const [deliveryPayment, setDeliveryPayment] = useState('現金');
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}`;
   const duration = order.durationHours === 0.5 ? '0.5 小時' : `${order.durationHours} 小時`;
@@ -239,12 +252,12 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
             {/* ─── 機器位置（多棟多樓層）─── */}
             {buildings.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 pt-3 pb-4 mb-3">
                 <h3 className="text-base font-bold text-gray-900 mb-3">機器位置</h3>
 
                 {/* 建築名稱 tabs */}
-                <div className="mb-4">
-                  <p className="text-xs text-gray-400 mb-2">建築名稱</p>
+                <div className="mb-3">
+                  <p className="text-sm font-medium text-gray-600 mb-2">建築名稱</p>
                   <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
                     {buildings.map((building) => {
                       const hasAlert = building.floors.some((f) => f.needsService);
@@ -253,10 +266,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                         <button
                           key={building.id}
                           onClick={() => handleBuildingSelect(building.id)}
-                          className={`relative shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                          className={`relative shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
                             isActive
-                              ? 'bg-gray-900 text-white border-gray-900'
-                              : 'bg-white text-gray-700 border-gray-200'
+                              ? 'bg-white text-gray-900 shadow-sm border border-gray-100'
+                              : 'bg-gray-100 text-gray-600'
                           }`}
                         >
                           {building.name}
@@ -267,10 +280,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
 
-                {/* 樓層與指標物 tags */}
+                {/* 樓層與位置 tags */}
                 {selectedBuilding && (
                   <div>
-                    <p className="text-xs text-gray-400 mb-2">樓層與指標物</p>
+                    <p className="text-sm font-medium text-gray-600 mb-2">樓層與位置</p>
                     <div className="flex gap-2 flex-wrap">
                       {selectedBuilding.floors.map((floor) => {
                         const isActive = selectedFloorId === floor.id;
@@ -278,10 +291,10 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                           <button
                             key={floor.id}
                             onClick={() => setSelectedFloorId(floor.id)}
-                            className={`relative px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                            className={`relative px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
                               isActive
-                                ? 'bg-blue-600 text-white border-blue-600'
-                                : 'bg-white text-gray-700 border-gray-200'
+                                ? 'bg-gray-900 text-white'
+                                : 'bg-white text-gray-600 border border-gray-200'
                             }`}
                           >
                             {floor.label}
@@ -399,39 +412,90 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             {/* ─── 送貨單 tab ─── */}
             {activeTab === 'delivery' && (
               <>
-                {/* 客戶資訊 */}
+                {/* 基本資訊 */}
                 <Section
-                  title="客戶資訊"
+                  title="基本資訊"
                   action={
-                    <a
-                      href={mapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-50 text-blue-500 text-xs font-semibold"
-                    >
-                      <Navigation className="w-3.5 h-3.5" />
-                      導航
-                    </a>
+                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold">
+                      <Download className="w-3.5 h-3.5" />
+                      PDF 版本
+                    </button>
                   }
                 >
-                  <InfoField icon={Building2}  label="客戶類型" value={order.customerType} />
-                  <InfoField icon={CreditCard} label="客戶卡號" value={order.cardNo} />
-                  <InfoField icon={User}       label="聯絡人"   value={order.contactName} />
-                  <InfoField icon={Phone}      label="電話"     value={order.phone} href={`tel:${order.phone}`} />
-                  <InfoField icon={MapPin}     label="服務地址" value={order.address} fullWidth />
+                  <InfoField icon={User}         label="客戶名稱"     value={order.customerName} fullWidth />
+                  <InfoField icon={User}         label="承辦人"       value={order.contactName} />
+                  <InfoField icon={Phone}        label="電話"         value={order.phone} href={`tel:${order.phone}`} />
+                  <InfoField icon={MapPin}       label="收款地址"     value={order.address} fullWidth />
+                  <InfoField icon={Hash}         label="統編"         value="39503759" />
+                  <InfoField icon={CalendarDays} label="日期"         value={order.date} />
+                  <InfoField icon={QrCode}       label="客戶卡號（機號）" value={order.cardNo} fullWidth />
                 </Section>
 
-                {/* 財務資訊 */}
-                <Section title="財務資訊（付款資訊）">
-                  <InfoField
-                    icon={DollarSign}
-                    label="服務金額"
-                    value={order.serviceAmount !== null ? `$${order.serviceAmount!.toLocaleString()}` : null}
-                  />
-                  <InfoField icon={CreditCard} label="付款方式" value={order.paymentMethod} />
-                  <InfoField icon={Radio}      label="來源管道" value={order.sourceChannel} />
-                  <InfoField icon={Building2}  label="所屬營站" value={order.station} />
-                </Section>
+                {/* 付款方式 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  <h3 className="text-base font-bold text-gray-900 mb-3">付款方式</h3>
+                  <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3 pb-0.5">
+                    {['現金', '刷卡', 'LinePay', '支票', '未收', '合約'].map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setDeliveryPayment(m)}
+                        className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                          deliveryPayment === m
+                            ? 'bg-gray-900 text-white'
+                            : 'bg-white text-gray-600 border border-gray-200'
+                        }`}
+                      >
+                        {m}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-400 mb-2">已預收</p>
+                  <div className="bg-blue-50 rounded-xl px-4 py-3">
+                    <p className="text-xs text-blue-400 mb-1">預計收款日期（未收適用）</p>
+                    <p className="text-base font-semibold text-blue-600">2026 年 03 月 15 日</p>
+                  </div>
+                </div>
+
+                {/* 用料清單 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  <h3 className="text-base font-bold text-gray-900 mb-3">用料清單</h3>
+                  <div className="flex items-center text-xs text-gray-400 pb-2 border-b border-gray-100">
+                    <span className="flex-1">品名/規格</span>
+                    <span className="w-8 text-center">數量</span>
+                    <span className="w-14 text-right">單價</span>
+                  </div>
+                  {DELIVERY_PARTS.map((part, i) => (
+                    <div key={i} className="flex items-start py-3 border-b border-gray-50">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">{part.name}</p>
+                        <p className="text-xs text-gray-400">{part.spec}</p>
+                      </div>
+                      <span className="w-8 text-center text-sm text-gray-700 shrink-0">{part.qty}</span>
+                      <span className="w-14 text-right text-sm font-semibold text-gray-900 shrink-0">${part.price}</span>
+                    </div>
+                  ))}
+                  <div className="pt-3 text-right space-y-0.5">
+                    <p className="text-xs text-gray-400">稅金({Math.round(DELIVERY_TAX_RATE * 100)}%): ${DELIVERY_TAX}</p>
+                    <p className="text-sm font-bold text-gray-900">總計: ${DELIVERY_TOTAL}</p>
+                  </div>
+                </div>
+
+                {/* 備註 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  <h3 className="text-base font-bold text-gray-900 mb-2">備註</h3>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    {order.workDescription ?? '客戶反應出水流速稍慢，已更換濾芯並調整壓力。'}
+                  </p>
+                </div>
+
+                {/* 客戶簽章 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  <h3 className="text-base font-bold text-gray-900 mb-3">客戶簽章</h3>
+                  <div className="h-32 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-300">
+                    <PenLine className="w-8 h-8" />
+                    <span className="text-sm">請在此處簽名</span>
+                  </div>
+                </div>
               </>
             )}
 
