@@ -120,7 +120,7 @@ export default function TodayPage() {
                       <div className="flex-1 h-px bg-gray-200" />
                     </div>
                   )}
-                  {!isLast && !showTravelInfo && <div className="h-4" />}
+                  {!isLast && !showTravelInfo && <div className="h-5" />}
                 </div>
               );
             })
