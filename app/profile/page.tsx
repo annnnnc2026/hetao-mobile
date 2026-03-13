@@ -110,6 +110,7 @@ export default function MaterialsPage() {
                     {[...items].reverse().map((t) => {
                       const style = TYPE_STYLE[t.type];
                       const qtyLabel = t.qty > 0 ? `+${t.qty}` : `${t.qty}`;
+                      const isDeficit = (balanceMap.get(t.materialNo) ?? 0) > 0;
                       return (
                         <div
                           key={t.id}
@@ -132,14 +133,21 @@ export default function MaterialsPage() {
                               )}
                             </div>
                           </div>
-                          {/* Right: qty + tag */}
+                          {/* Right: qty + tags */}
                           <div className="flex flex-col items-end gap-1 shrink-0">
                             <p className={`text-base font-bold tabular-nums ${style.qty}`}>
                               {qtyLabel} {t.unit}
                             </p>
-                            <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${style.tag}`}>
-                              {t.type}
-                            </span>
+                            <div className="flex items-center gap-1">
+                              {isDeficit && (
+                                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-red-50 text-red-500">
+                                  欠料
+                                </span>
+                              )}
+                              <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${style.tag}`}>
+                                {t.type}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       );
