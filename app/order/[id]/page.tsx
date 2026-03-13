@@ -295,57 +295,51 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
             {/* ─── 機器位置（多棟多樓層）─── */}
             {buildings.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 pt-3 pb-4 mb-3">
-                <h3 className="text-base font-bold text-gray-900 mb-3">機器位置</h3>
+              <div className="mb-4">
+                <p className="text-xs text-gray-400 mb-1.5">機器位置</p>
 
                 {/* 建築名稱 tabs */}
-                <div className="mb-3">
-                  <p className="text-sm font-medium text-gray-600 mb-2">建築名稱</p>
-                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-                    {buildings.map((building) => {
-                      const hasAlert = building.floors.some((f) => f.needsService);
-                      const isActive = selectedBuildingId === building.id;
-                      return (
-                        <button
-                          key={building.id}
-                          onClick={() => handleBuildingSelect(building.id)}
-                          className={`relative shrink-0 px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                            isActive
-                              ? 'bg-white text-gray-900 shadow-sm border border-gray-100'
-                              : 'bg-gray-100 text-gray-600'
-                          }`}
-                        >
-                          {building.name}
-                          {hasAlert && <NotifDot />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
+                  {buildings.map((building) => {
+                    const hasAlert = building.floors.some((f) => f.needsService);
+                    const isActive = selectedBuildingId === building.id;
+                    return (
+                      <button
+                        key={building.id}
+                        onClick={() => handleBuildingSelect(building.id)}
+                        className={`relative shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                          isActive
+                            ? 'bg-gray-900 text-white'
+                            : 'bg-gray-100 text-gray-500'
+                        }`}
+                      >
+                        {building.name}
+                        {hasAlert && <NotifDot />}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* 樓層與位置 tags */}
                 {selectedBuilding && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-600 mb-2">樓層與位置</p>
-                    <div className="flex gap-2 flex-wrap">
-                      {selectedBuilding.floors.map((floor) => {
-                        const isActive = selectedFloorId === floor.id;
-                        return (
-                          <button
-                            key={floor.id}
-                            onClick={() => setSelectedFloorId(floor.id)}
-                            className={`relative px-3 py-1.5 rounded-full text-sm font-semibold transition-colors ${
-                              isActive
-                                ? 'bg-gray-900 text-white'
-                                : 'bg-white text-gray-600 border border-gray-200'
-                            }`}
-                          >
-                            {floor.label}
-                            {floor.needsService && <NotifDot />}
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="flex gap-1.5 flex-wrap">
+                    {selectedBuilding.floors.map((floor) => {
+                      const isActive = selectedFloorId === floor.id;
+                      return (
+                        <button
+                          key={floor.id}
+                          onClick={() => setSelectedFloorId(floor.id)}
+                          className={`relative px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                            isActive
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-100 text-gray-500'
+                          }`}
+                        >
+                          {floor.label}
+                          {floor.needsService && <NotifDot />}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -353,22 +347,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
             {/* ─── 舊格式 fallback（無 machineBuildings）─── */}
             {buildings.length === 0 && (order.locationBuilding || order.locationFloor) && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
-                <h3 className="text-base font-bold text-gray-900 mb-3">機器位置</h3>
-                {order.locationBuilding && (
-                  <div className="mb-2.5">
-                    <p className="text-xs text-gray-400 mb-1.5">建築名稱</p>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-semibold border border-blue-100">
+              <div className="mb-4">
+                <p className="text-xs text-gray-400 mb-1.5">機器位置</p>
+                <div className="flex gap-2 flex-wrap items-center">
+                  {order.locationBuilding && (
+                    <span className="px-2.5 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-700">
                       {order.locationBuilding}
                     </span>
-                  </div>
-                )}
-                {order.locationFloor && (
-                  <div>
-                    <p className="text-xs text-gray-400 mb-1.5">樓層與指標物</p>
-                    <p className="text-sm font-semibold text-gray-900">{order.locationFloor}</p>
-                  </div>
-                )}
+                  )}
+                  {order.locationFloor && (
+                    <span className="text-xs text-gray-600">{order.locationFloor}</span>
+                  )}
+                </div>
               </div>
             )}
 
