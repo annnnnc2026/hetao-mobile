@@ -169,7 +169,7 @@ export default function RecentPage() {
         </div>
 
         {/* Orders for selected date */}
-        <div className="px-5 pb-4 space-y-4">
+        <div className="px-5 pb-4 flex flex-col gap-4">
           {orders.length === 0 ? (
             <div className="py-12 text-center text-gray-400 text-sm">
               當日無工單
