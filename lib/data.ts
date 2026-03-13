@@ -406,3 +406,26 @@ export const TRAVEL_INFO: TravelInfo[] = [
   { minutes: 12, km: 8.1 },
   { minutes: 18, km: 12.4 },
 ];
+
+export interface MaterialItem {
+  id: string;
+  partNo: string;    // 料號
+  name: string;      // 品名
+  unit: string;      // 單位
+  received: number;  // 已領數量
+  used: number;      // 已使用數量
+  // remaining = received - used
+}
+
+export const MATERIALS: MaterialItem[] = [
+  { id: 'm01', partNo: 'F-PP5-STD', name: '5吋 PP 棉濾芯',       unit: '支', received: 10, used: 7 },
+  { id: 'm02', partNo: 'F-AC1-STD', name: '1吋活性碳濾芯',       unit: '支', received: 8,  used: 8 },
+  { id: 'm03', partNo: 'F-RO-75G',  name: 'RO 逆滲透膜 75G',     unit: '片', received: 3,  used: 1 },
+  { id: 'm04', partNo: 'V-INL-12V', name: '進水電磁閥 DC12V',    unit: '個', received: 2,  used: 1 },
+  { id: 'm05', partNo: 'C-CLM-M6',  name: '出水止水夾 M6',       unit: '個', received: 5,  used: 3 },
+  { id: 'm06', partNo: 'O-RNG-LG',  name: 'O 型環 (大)',         unit: '個', received: 20, used: 15 },
+  { id: 'm07', partNo: 'T-DRN-CON', name: '排水管接頭',          unit: '個', received: 10, used: 4 },
+  { id: 'm08', partNo: 'L-UV-8W',   name: 'UV 殺菌燈管 8W',      unit: '支', received: 3,  used: 3 },
+  { id: 'm09', partNo: 'T-PRE-2L',  name: '壓力桶 2L',           unit: '顆', received: 2,  used: 0 },
+  { id: 'm10', partNo: 'F-QCN-1/4', name: '快拆接頭 1/4"',       unit: '個', received: 15, used: 6 },
+];
