@@ -425,7 +425,7 @@ export const MATERIALS: MaterialItem[] = [
   { id: 'm05', partNo: 'C-CLM-M6',  name: '出水止水夾 M6',       unit: '個', received: 5,  used: 3 },
   { id: 'm06', partNo: 'O-RNG-LG',  name: 'O 型環 (大)',         unit: '個', received: 20, used: 15 },
   { id: 'm07', partNo: 'T-DRN-CON', name: '排水管接頭',          unit: '個', received: 10, used: 4 },
-  { id: 'm08', partNo: 'L-UV-8W',   name: 'UV 殺菌燈管 8W',      unit: '支', received: 3,  used: 3 },
+  { id: 'm08', partNo: 'H-ELM-STD', name: '加熱管（標準型）',     unit: '支', received: 3,  used: 3 },
   { id: 'm09', partNo: 'T-PRE-2L',  name: '壓力桶 2L',           unit: '顆', received: 2,  used: 0 },
   { id: 'm10', partNo: 'F-QCN-1/4', name: '快拆接頭 1/4"',       unit: '個', received: 15, used: 6 },
 ];
