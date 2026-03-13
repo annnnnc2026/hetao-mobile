@@ -17,14 +17,16 @@ import ServiceTypeBadge from '@/components/ServiceTypeBadge';
 // ─── Mock service history ──────────────────────────────────────────────────────
 type HistoryStatus = '已完成' | '進行中' | '已延期';
 
+// 已按日期由新到舊排序；每次保養只換一道濾芯，非每次都換濾芯
 const SERVICE_HISTORY: {
   date: string; type: string; desc: string; technician: string; status: HistoryStatus;
 }[] = [
-  { date: '2026-01-15', type: '維修', desc: '出水管漏水修復，更換出水閥、止水墊片', technician: '張志偉', status: '已完成' },
-  { date: '2025-11-20', type: '保養', desc: '換第一道濾芯、換第二道濾芯、清缸消毒', technician: '張志偉', status: '已完成' },
-  { date: '2025-08-05', type: '保養', desc: '換第一道濾芯、清缸', technician: '李大明', status: '已延期' },
-  { date: '2025-05-12', type: '維修', desc: '冷水溫控異常，更換溫控元件', technician: '張志偉', status: '進行中' },
-  { date: '2025-02-18', type: '保養', desc: '換第二道濾芯、換第三道濾芯', technician: '王小明', status: '已完成' },
+  { date: '2026-01-15', type: '維修', desc: '出水管漏水，更換出水閥與止水墊片',       technician: '張志偉', status: '已完成' },
+  { date: '2025-11-20', type: '保養', desc: '換第四道濾芯、清缸消毒',                 technician: '張志偉', status: '已完成' },
+  { date: '2025-08-10', type: '保養', desc: '換第三道濾芯',                           technician: '李大明', status: '已延期' },
+  { date: '2025-05-12', type: '維修', desc: '冷水溫控異常，更換溫控元件',             technician: '張志偉', status: '進行中' },
+  { date: '2025-02-18', type: '保養', desc: '換第二道濾芯',                           technician: '王小明', status: '已完成' },
+  { date: '2024-11-05', type: '保養', desc: '換第一道濾芯、清缸消毒',                 technician: '張志偉', status: '已完成' },
 ];
 
 const STATUS_STYLE: Record<HistoryStatus, { dot: string; text: string; label: string }> = {
@@ -32,6 +34,20 @@ const STATUS_STYLE: Record<HistoryStatus, { dot: string; text: string; label: st
   '進行中': { dot: 'bg-amber-400', text: 'text-amber-500', label: '進行中' },
   '已延期': { dot: 'bg-red-400',   text: 'text-red-500',   label: '已延期' },
 };
+
+// ─── Mock parts history (領進料) ───────────────────────────────────────────────
+type PartsStatus = '已用料' | '待用料';
+
+const PARTS_HISTORY: {
+  date: string; name: string; qty: number; unit: string; status: PartsStatus;
+}[] = [
+  { date: '2026-03-04', name: '活性碳濾芯 (CTO)',  qty: 1, unit: '支', status: '待用料' },
+  { date: '2026-01-15', name: '出水閥',             qty: 1, unit: '個', status: '已用料' },
+  { date: '2026-01-15', name: '止水墊片',           qty: 2, unit: '片', status: '已用料' },
+  { date: '2025-11-20', name: 'PP 纖維濾芯 5u',    qty: 1, unit: '支', status: '已用料' },
+  { date: '2025-08-10', name: 'RO 逆滲透膜 75G',   qty: 1, unit: '支', status: '已用料' },
+  { date: '2025-02-18', name: 'UF 中空絲濾芯',     qty: 1, unit: '支', status: '已用料' },
+];
 
 // ─── Info field ───────────────────────────────────────────────────────────────
 function InfoField({
@@ -382,13 +398,13 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <h3 className="text-base font-bold text-gray-900">歷史服務紀錄</h3>
                   </div>
                   <div className="flex flex-col gap-3">
-                    {SERVICE_HISTORY.map((h, i) => {
+                    {[...SERVICE_HISTORY].sort((a, b) => b.date.localeCompare(a.date)).map((h, i, arr) => {
                       const style = STATUS_STYLE[h.status];
                       return (
                         <div key={i} className="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
                           <div className="flex flex-col items-center pt-1.5">
                             <div className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
-                            {i < SERVICE_HISTORY.length - 1 && (
+                            {i < arr.length - 1 && (
                               <div className="w-px flex-1 bg-gray-100 mt-1.5 min-h-[20px]" />
                             )}
                           </div>
@@ -499,11 +515,37 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               </>
             )}
 
-            {/* ─── 用料清單 tab ─── */}
+            {/* ─── 領進料 tab ─── */}
             {activeTab === 'parts' && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 mb-3 flex flex-col items-center justify-center gap-2">
-                <Package className="w-10 h-10 text-gray-200" />
-                <p className="text-sm text-gray-400">尚無用料紀錄</p>
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                <div className="flex items-center gap-2 mb-3">
+                  <Package className="w-4 h-4 text-gray-400" />
+                  <h3 className="text-base font-bold text-gray-900">用料紀錄</h3>
+                </div>
+                <div className="flex flex-col gap-0">
+                  {[...PARTS_HISTORY].sort((a, b) => b.date.localeCompare(a.date)).map((p, i, arr) => (
+                    <div key={i} className="flex items-start gap-3 pb-3 last:pb-0">
+                      <div className="flex flex-col items-center pt-1.5">
+                        <div className={`w-2 h-2 rounded-full shrink-0 ${p.status === '已用料' ? 'bg-green-400' : 'bg-amber-400'}`} />
+                        {i < arr.length - 1 && (
+                          <div className="w-px flex-1 bg-gray-100 mt-1.5 min-h-[24px]" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pb-3 border-b border-gray-50 last:border-0">
+                        <div className="flex items-center gap-2 mb-0.5">
+                          <span className="text-xs text-gray-400">{p.date}</span>
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            p.status === '已用料'
+                              ? 'bg-green-50 text-green-600'
+                              : 'bg-amber-50 text-amber-600'
+                          }`}>{p.status}</span>
+                        </div>
+                        <p className="text-sm text-gray-800">{p.name}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">數量：{p.qty} {p.unit}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
