@@ -110,7 +110,7 @@ export default function MaterialsPage() {
                     {[...items].reverse().map((t) => {
                       const style = TYPE_STYLE[t.type];
                       const qtyLabel = t.qty > 0 ? `+${t.qty}` : `${t.qty}`;
-                      const isDeficit = (balanceMap.get(t.materialNo) ?? 0) > 0;
+                      const isDeficit = t.type === '領料' && (balanceMap.get(t.materialNo) ?? 0) > 0;
                       return (
                         <div
                           key={t.id}
