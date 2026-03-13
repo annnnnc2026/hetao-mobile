@@ -4,6 +4,22 @@ export type Priority = '急件' | '緊急' | null;
 export type CustomerType = '商用' | '家用' | '公家機關' | '醫療' | '共約';
 export type PaymentMethod = '月結' | '現金' | '信用卡' | '匯款';
 
+export interface MachineFloor {
+  id: string;
+  label: string;           // e.g. "4F 會議室"
+  needsService: boolean;
+  machineNo: string;       // 設備機號 (specific machine ID)
+  modelNumber: string;
+  workDescription: string | null;
+  specialNote: string | null;
+}
+
+export interface MachineBuilding {
+  id: string;
+  name: string;            // e.g. "B棟"
+  floors: MachineFloor[];
+}
+
 export interface WorkOrder {
   id: string;             // display ID, e.g. WO-20260304-0001
   erpNo: string;          // ERP system number / 機號
@@ -23,6 +39,7 @@ export interface WorkOrder {
   // location detail (commercial clients)
   locationBuilding?: string | null;  // e.g. 長榮飯店H棟
   locationFloor?: string | null;     // e.g. 3F 洗手間右側
+  machineBuildings?: MachineBuilding[] | null;  // multi-building/floor structure
   // dispatch
   assignedBy: string;
   technician: string;
@@ -69,6 +86,24 @@ export const ALL_ORDERS: WorkOrder[] = [
     phone: '03-550-1234',
     locationBuilding: '台元科技園區B棟',
     locationFloor: '3F 茶水間右側',
+    machineBuildings: [
+      {
+        id: 'A',
+        name: 'A棟',
+        floors: [
+          { id: 'A-1F', label: '1F 接待大廳', needsService: false, machineNo: 'A1-0023', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null },
+          { id: 'A-2F', label: '2F 辦公區', needsService: false, machineNo: 'A2-0041', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null },
+        ],
+      },
+      {
+        id: 'B',
+        name: 'B棟',
+        floors: [
+          { id: 'B-3F', label: '3F 茶水間右側', needsService: true, machineNo: 'B3-0017', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記' },
+          { id: 'B-5F', label: '5F 主管室', needsService: false, machineNo: 'B5-0029', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null },
+        ],
+      },
+    ],
     assignedBy: '林伯典',
     technician: TECHNICIAN_NAME,
     durationHours: 1,
@@ -262,6 +297,23 @@ export const ALL_ORDERS: WorkOrder[] = [
     address: '新竹市科學園區力行六路8號',
     contactName: '廠務部',
     phone: '03-563-6688',
+    machineBuildings: [
+      {
+        id: 'H',
+        name: 'H棟',
+        floors: [
+          { id: 'H-2F', label: '2F 工程師休息室', needsService: true, machineNo: 'H2-0051', modelNumber: 'UR9005BW-1', workDescription: '定期濾芯更換保養', specialNote: '需事先申請廠區通行證，請提前30分鐘抵達' },
+          { id: 'H-4F', label: '4F 會議室', needsService: false, machineNo: 'H4-0063', modelNumber: 'UR9005BW-1', workDescription: null, specialNote: null },
+        ],
+      },
+      {
+        id: 'J',
+        name: 'J棟',
+        floors: [
+          { id: 'J-1F', label: '1F 休息區', needsService: true, machineNo: 'J1-0078', modelNumber: 'UR9005BW-1', workDescription: '定期濾芯更換保養', specialNote: null },
+        ],
+      },
+    ],
     assignedBy: '林伯典',
     technician: TECHNICIAN_NAME,
     durationHours: 1,
@@ -294,6 +346,23 @@ export const ALL_ORDERS: WorkOrder[] = [
     address: '新竹市科學園區創新一路1號',
     contactName: '設備管理部',
     phone: '03-567-0767',
+    machineBuildings: [
+      {
+        id: 'M',
+        name: 'M棟',
+        floors: [
+          { id: 'M-4F', label: '4F 會議室', needsService: true, machineNo: 'M4-0011', modelNumber: 'UR9615AG-2', workDescription: '兩台設備保養', specialNote: null },
+          { id: 'M-4F-VIP', label: '4F 貴賓室', needsService: false, machineNo: 'M4-0012', modelNumber: 'UR9615AG-2', workDescription: null, specialNote: null },
+        ],
+      },
+      {
+        id: 'N',
+        name: 'N棟',
+        floors: [
+          { id: 'N-6F', label: '6F 研發中心', needsService: false, machineNo: 'N6-0033', modelNumber: 'UR9615AG-2', workDescription: null, specialNote: null },
+        ],
+      },
+    ],
     assignedBy: '林伯典',
     technician: TECHNICIAN_NAME,
     durationHours: 1,

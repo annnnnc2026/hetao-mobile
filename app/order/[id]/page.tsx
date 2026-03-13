@@ -9,18 +9,29 @@ import {
   CheckCircle2, RotateCcw, Timer, ClipboardList, Truck, Package,
   History,
 } from 'lucide-react';
-import { getOrderById } from '@/lib/data';
+import { getOrderById, MachineBuilding, MachineFloor } from '@/lib/data';
 import StatusBadge from '@/components/StatusBadge';
 import PriorityBadge from '@/components/PriorityBadge';
 import ServiceTypeBadge from '@/components/ServiceTypeBadge';
 
 // ─── Mock service history ──────────────────────────────────────────────────────
-const SERVICE_HISTORY = [
-  { date: '2026-01-15', type: '維修', desc: '出水管漏水修復，更換出水閥', technician: '張志偉', result: '已完成' },
-  { date: '2025-11-20', type: '保養', desc: '季度保養：濾芯更換、清潔消毒', technician: '張志偉', result: '已完成' },
-  { date: '2025-08-05', type: '保養', desc: '季度保養：濾芯更換', technician: '李大明', result: '已完成' },
-  { date: '2025-05-12', type: '維修', desc: '冷水溫控異常，更換溫控元件', technician: '張志偉', result: '已完成' },
+type HistoryStatus = '已完成' | '進行中' | '已延期';
+
+const SERVICE_HISTORY: {
+  date: string; type: string; desc: string; technician: string; status: HistoryStatus;
+}[] = [
+  { date: '2026-01-15', type: '維修', desc: '出水管漏水修復，更換出水閥、止水墊片', technician: '張志偉', status: '已完成' },
+  { date: '2025-11-20', type: '保養', desc: '換第一道濾芯、換第二道濾芯、清缸消毒', technician: '張志偉', status: '已完成' },
+  { date: '2025-08-05', type: '保養', desc: '換第一道濾芯、清缸', technician: '李大明', status: '已延期' },
+  { date: '2025-05-12', type: '維修', desc: '冷水溫控異常，更換溫控元件', technician: '張志偉', status: '進行中' },
+  { date: '2025-02-18', type: '保養', desc: '換第二道濾芯、換第三道濾芯', technician: '王小明', status: '已完成' },
 ];
+
+const STATUS_STYLE: Record<HistoryStatus, { dot: string; text: string; label: string }> = {
+  '已完成': { dot: 'bg-green-400', text: 'text-green-600', label: '已完成' },
+  '進行中': { dot: 'bg-amber-400', text: 'text-amber-500', label: '進行中' },
+  '已延期': { dot: 'bg-red-400',   text: 'text-red-500',   label: '已延期' },
+};
 
 // ─── Info field ───────────────────────────────────────────────────────────────
 function InfoField({
@@ -141,12 +152,28 @@ function PillGroup({ label, options, value, onChange }: {
   );
 }
 
+// ─── Notification dot ─────────────────────────────────────────────────────────
+function NotifDot() {
+  return (
+    <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white" />
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
   const order = getOrderById(id);
   if (!order) notFound();
+
+  const buildings: MachineBuilding[] = order.machineBuildings ?? [];
+
+  const [selectedBuildingId, setSelectedBuildingId] = useState<string>(buildings[0]?.id ?? '');
+  const [selectedFloorId, setSelectedFloorId] = useState<string>(buildings[0]?.floors[0]?.id ?? '');
+
+  const selectedBuilding = buildings.find((b) => b.id === selectedBuildingId) ?? buildings[0] ?? null;
+  const selectedFloor: MachineFloor | null =
+    selectedBuilding?.floors.find((f) => f.id === selectedFloorId) ?? selectedBuilding?.floors[0] ?? null;
 
   const [sheet, setSheet] = useState<'none' | 'arrived' | 'delay' | 'transfer' | 'complete'>('none');
   const [activeTab, setActiveTab] = useState<TabKey>('maintenance');
@@ -166,6 +193,18 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}`;
   const duration = order.durationHours === 0.5 ? '0.5 小時' : `${order.durationHours} 小時`;
+
+  // Machine-level values: prefer selected floor, fall back to order-level
+  const machineNo = selectedFloor?.machineNo ?? order.erpNo;
+  const modelNumber = selectedFloor?.modelNumber ?? order.modelNumber;
+  const workDescription = selectedFloor?.workDescription ?? order.workDescription;
+  const specialNote = selectedFloor?.specialNote ?? order.specialNote;
+
+  function handleBuildingSelect(buildingId: string) {
+    const b = buildings.find((x) => x.id === buildingId);
+    setSelectedBuildingId(buildingId);
+    setSelectedFloorId(b?.floors[0]?.id ?? '');
+  }
 
   return (
     <>
@@ -198,16 +237,66 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
               <p className="text-xs text-gray-400">{order.address}</p>
             </div>
 
-            {/* ─── 基本資訊 (always visible) ─── */}
-            <Section title="基本資訊">
-              <InfoField icon={Building2}   label="機號"     value={order.erpNo} />
-              <InfoField icon={CalendarDays} label="派工日期" value={order.date} />
-              <InfoField icon={Tag}          label="派工類型" value={order.serviceType} />
-              <InfoField icon={AlertCircle}  label="優先度"   value={order.priority ?? '一般'} />
-            </Section>
+            {/* ─── 機器位置（多棟多樓層）─── */}
+            {buildings.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                <h3 className="text-base font-bold text-gray-900 mb-3">機器位置</h3>
 
-            {/* ─── 機器位置 (商用客戶才顯示) ─── */}
-            {(order.locationBuilding || order.locationFloor) && (
+                {/* 建築名稱 tabs */}
+                <div className="mb-4">
+                  <p className="text-xs text-gray-400 mb-2">建築名稱</p>
+                  <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+                    {buildings.map((building) => {
+                      const hasAlert = building.floors.some((f) => f.needsService);
+                      const isActive = selectedBuildingId === building.id;
+                      return (
+                        <button
+                          key={building.id}
+                          onClick={() => handleBuildingSelect(building.id)}
+                          className={`relative shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                            isActive
+                              ? 'bg-gray-900 text-white border-gray-900'
+                              : 'bg-white text-gray-700 border-gray-200'
+                          }`}
+                        >
+                          {building.name}
+                          {hasAlert && <NotifDot />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 樓層與指標物 tags */}
+                {selectedBuilding && (
+                  <div>
+                    <p className="text-xs text-gray-400 mb-2">樓層與指標物</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {selectedBuilding.floors.map((floor) => {
+                        const isActive = selectedFloorId === floor.id;
+                        return (
+                          <button
+                            key={floor.id}
+                            onClick={() => setSelectedFloorId(floor.id)}
+                            className={`relative px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                              isActive
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-200'
+                            }`}
+                          >
+                            {floor.label}
+                            {floor.needsService && <NotifDot />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ─── 舊格式 fallback（無 machineBuildings）─── */}
+            {buildings.length === 0 && (order.locationBuilding || order.locationFloor) && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
                 <h3 className="text-base font-bold text-gray-900 mb-3">機器位置</h3>
                 {order.locationBuilding && (
@@ -233,31 +322,35 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             {/* ─── 保養卡資訊 tab ─── */}
             {activeTab === 'maintenance' && (
               <>
-                {/* 派工資訊 */}
-                <Section title="派工資訊">
+                {/* 基本資訊 + 派工資訊（合併） */}
+                <Section title="基本資訊">
+                  <InfoField icon={Building2}   label="機號"     value={order.erpNo} />
+                  <InfoField icon={CalendarDays} label="派工日期" value={order.date} />
+                  <InfoField icon={Tag}          label="派工類型" value={order.serviceType} />
+                  <InfoField icon={AlertCircle}  label="優先度"   value={order.priority ?? '一般'} />
                   <InfoField icon={User}         label="指派人"   value={order.assignedBy} />
                   <InfoField icon={User}         label="技術人員" value={order.technician} />
-                  <InfoField icon={CalendarDays} label="排程日期" value={order.date} />
                   <InfoField icon={Clock}        label="排程時段" value={`${order.timeStart}–${order.timeEnd}`} />
                   <InfoField icon={Clock}        label="預估工時" value={duration} />
                 </Section>
 
-                {/* 服務內容 */}
-                {(order.failureCategory || order.modelNumber) && (
-                  <Section title="服務內容">
+                {/* 本日服務內容 */}
+                {(order.failureCategory || modelNumber) && (
+                  <Section title="本日服務內容">
                     {order.failureCategory && (
                       <InfoField icon={Tag}       label="原因分類" value={order.failureCategory} />
                     )}
                     {order.failureType && (
                       <InfoField icon={AlertCircle} label="故障類型" value={order.failureType} />
                     )}
-                    <InfoField icon={Wrench} label="設備型號" value={order.modelNumber} />
-                    <InfoField icon={Wrench} label="設備數量" value={`${order.deviceCount} 台`} />
-                    {order.workDescription && (
-                      <InfoField icon={FileText} label="工作說明" value={order.workDescription} fullWidth />
+                    <InfoField icon={Wrench} label="設備機號" value={machineNo} />
+                    <InfoField icon={Wrench} label="設備型號" value={modelNumber} />
+                    <InfoField icon={Building2} label="設備數量" value={`${order.deviceCount} 台`} />
+                    {workDescription && (
+                      <InfoField icon={FileText} label="工作說明" value={workDescription} fullWidth />
                     )}
-                    {order.specialNote && (
-                      <InfoField icon={FileText} label="特別備註" value={order.specialNote} fullWidth />
+                    {specialNote && (
+                      <InfoField icon={FileText} label="特別備註" value={specialNote} fullWidth />
                     )}
                   </Section>
                 )}
@@ -276,25 +369,28 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
                     <h3 className="text-base font-bold text-gray-900">歷史服務紀錄</h3>
                   </div>
                   <div className="flex flex-col gap-3">
-                    {SERVICE_HISTORY.map((h, i) => (
-                      <div key={i} className="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
-                        <div className="flex flex-col items-center pt-1">
-                          <div className="w-2 h-2 rounded-full bg-gray-300 shrink-0" />
-                          {i < SERVICE_HISTORY.length - 1 && (
-                            <div className="w-px flex-1 bg-gray-100 mt-1.5 min-h-[20px]" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <span className="text-xs text-gray-400">{h.date}</span>
-                            <span className="text-xs font-semibold text-gray-600 px-2 py-0.5 bg-gray-100 rounded-full">{h.type}</span>
+                    {SERVICE_HISTORY.map((h, i) => {
+                      const style = STATUS_STYLE[h.status];
+                      return (
+                        <div key={i} className="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+                          <div className="flex flex-col items-center pt-1.5">
+                            <div className={`w-2 h-2 rounded-full shrink-0 ${style.dot}`} />
+                            {i < SERVICE_HISTORY.length - 1 && (
+                              <div className="w-px flex-1 bg-gray-100 mt-1.5 min-h-[20px]" />
+                            )}
                           </div>
-                          <p className="text-sm text-gray-800 leading-snug">{h.desc}</p>
-                          <p className="text-xs text-gray-400 mt-0.5">{h.technician}</p>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <span className="text-xs text-gray-400">{h.date}</span>
+                              <span className="text-xs font-semibold text-gray-600 px-2 py-0.5 bg-gray-100 rounded-full">{h.type}</span>
+                            </div>
+                            <p className="text-sm text-gray-800 leading-snug">{h.desc}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{h.technician}</p>
+                          </div>
+                          <span className={`text-xs font-semibold shrink-0 pt-1 ${style.text}`}>{h.status}</span>
                         </div>
-                        <span className="text-xs text-green-600 font-medium shrink-0 pt-1">{h.result}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               </>
