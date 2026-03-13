@@ -16,7 +16,7 @@ export default function MaterialsPage() {
   MATERIAL_TRANSACTIONS.forEach((t) => {
     balanceMap.set(t.name, (balanceMap.get(t.name) ?? 0) + t.qty);
   });
-  const deficitItems = [...balanceMap.entries()].filter(([, v]) => v < 0);
+  const deficitItems = [...balanceMap.entries()].filter(([, v]) => v > 0);
   const deficitCount = deficitItems.length;
 
   return (
