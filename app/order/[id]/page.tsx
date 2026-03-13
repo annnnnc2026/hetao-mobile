@@ -261,10 +261,37 @@ export default function OrderDetailPage({ params }: { params: Promise<{ id: stri
             <h1 className="text-2xl font-bold text-gray-900 leading-tight mb-1">
               {order.customerName}
             </h1>
-            <div className="flex items-center gap-1.5 mb-5">
+            <div className="flex items-center gap-1.5 mb-4">
               <MapPin className="w-3.5 h-3.5 text-gray-400 shrink-0" />
               <p className="text-xs text-gray-400">{order.address}</p>
             </div>
+
+            {/* ─── 統計概覽 ─── */}
+            {(() => {
+              const today = new Date().toISOString().split('T')[0];
+              const totalMachines = buildings.flatMap((b) => b.floors).length || 5;
+              const todayDone = SERVICE_HISTORY.filter((h) => h.date === today && h.status === '已完成').length;
+              const todayPending = buildings.flatMap((b) => b.floors).filter((f) => f.needsService).length
+                || (totalMachines - todayDone > 0 ? totalMachines - todayDone : 0);
+              return (
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4">
+                  <div className="grid grid-cols-3 divide-x divide-gray-100">
+                    <div className="flex flex-col items-center gap-0.5 py-4">
+                      <span className="text-2xl font-bold text-gray-900">{totalMachines}</span>
+                      <span className="text-xs text-gray-400">設備總數</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5 py-4">
+                      <span className="text-2xl font-bold text-green-500">{todayDone}</span>
+                      <span className="text-xs text-gray-400">今日已完工</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5 py-4">
+                      <span className="text-2xl font-bold text-amber-500">{todayPending}</span>
+                      <span className="text-xs text-gray-400">今日待處理</span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* ─── 機器位置（多棟多樓層）─── */}
             {buildings.length > 0 && (
