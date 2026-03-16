@@ -82,10 +82,9 @@ export default function TodayPage() {
             )}
           </div>
         </div>
-        </div>{/* end sticky */}
 
-        {/* Filter tabs */}
-        <div className="px-5 mb-4 flex gap-2 overflow-x-auto no-scrollbar">
+          {/* Filter tabs */}
+          <div className="px-5 mb-4 flex gap-2 overflow-x-auto no-scrollbar">
           {FILTER_TABS.map((tab) => (
             <button
               key={tab.value}
@@ -99,7 +98,8 @@ export default function TodayPage() {
               {tab.label}
             </button>
           ))}
-        </div>
+          </div>
+        </div>{/* end sticky */}
 
         {/* Order list */}
         <div className="px-5 flex flex-col gap-4">
