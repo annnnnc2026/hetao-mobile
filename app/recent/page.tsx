@@ -120,7 +120,7 @@ export default function RecentPage() {
         {/* Date strip */}
         <div
           ref={dateRowRef}
-          className="bg-white border-b border-gray-200 overflow-x-auto no-scrollbar"
+          className="sticky top-[72px] z-30 bg-white border-b border-gray-200 overflow-x-auto no-scrollbar"
         >
           <div className="flex px-2 py-3 gap-1 min-w-max">
             {windowDays.map((d) => {
