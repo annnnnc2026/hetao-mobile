@@ -281,12 +281,12 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                       <span className="text-xs text-gray-400">設備總數</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5 py-4">
-                      <span className="text-2xl font-bold text-green-500">{todayDone}</span>
-                      <span className="text-xs text-gray-400">今日已完工</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5 py-4">
                       <span className="text-2xl font-bold text-amber-500">{todayPending}</span>
                       <span className="text-xs text-gray-400">今日待處理</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5 py-4">
+                      <span className="text-2xl font-bold text-green-500">{todayDone}</span>
+                      <span className="text-xs text-gray-400">今日已完工</span>
                     </div>
                   </div>
                 </div>
@@ -301,20 +301,18 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 {/* 建築名稱 tabs */}
                 <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
                   {buildings.map((building) => {
-                    const hasAlert = building.floors.some((f) => f.needsService);
                     const isActive = selectedBuildingId === building.id;
                     return (
                       <button
                         key={building.id}
                         onClick={() => handleBuildingSelect(building.id)}
-                        className={`relative shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                        className={`shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                           isActive
                             ? 'bg-gray-900 text-white'
                             : 'bg-gray-100 text-gray-500'
                         }`}
                       >
                         {building.name}
-                        {hasAlert && <NotifDot />}
                       </button>
                     );
                   })}
@@ -329,14 +327,13 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                         <button
                           key={floor.id}
                           onClick={() => setSelectedFloorId(floor.id)}
-                          className={`relative px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                             isActive
                               ? 'bg-blue-600 text-white'
                               : 'bg-gray-100 text-gray-500'
                           }`}
                         >
                           {floor.label}
-                          {floor.needsService && <NotifDot />}
                         </button>
                       );
                     })}
