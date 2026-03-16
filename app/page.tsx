@@ -1,139 +1,129 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, X, Navigation } from 'lucide-react';
 import OrderCard from '@/components/OrderCard';
 import BottomNav from '@/components/BottomNav';
-import { ALL_ORDERS, getOrdersByDate, TODAY } from '@/lib/data';
+import { getOrdersByDate, TRAVEL_INFO, TECHNICIAN_NAME, TODAY, OrderStatus } from '@/lib/data';
 
-const WEEKDAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+const FILTER_TABS: { label: string; value: OrderStatus | 'all' }[] = [
+  { label: '全部',   value: 'all' },
+  { label: '已指派', value: '已指派' },
+  { label: '進行中', value: '進行中' },
+  { label: '已完成', value: '已完成' },
+  { label: '延期',   value: '延期' },
+];
 
-function toDateStr(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+export default function TodayPage() {
+  const [activeFilter, setActiveFilter] = useState<OrderStatus | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
-function getWeekStart(d: Date): Date {
-  const s = new Date(d);
-  s.setDate(d.getDate() - d.getDay());
-  return s;
-}
+  const todayOrders = getOrdersByDate(TODAY);
+  const completedCount = todayOrders.filter((o) => o.status === '已完成').length;
+  const totalCount = todayOrders.length;
+  const progressPct = totalCount ? Math.round((completedCount / totalCount) * 100) : 0;
 
-export default function CalendarPage() {
-  const initial = new Date(TODAY);
-  const [selectedDate, setSelectedDate] = useState<Date>(initial);
-  const [weekStart, setWeekStart] = useState<Date>(getWeekStart(initial));
+  const filteredOrders = useMemo(() => {
+    return todayOrders.filter((order) => {
+      const matchFilter = activeFilter === 'all' || order.status === activeFilter;
+      const q = searchQuery.trim().toLowerCase();
+      const matchSearch =
+        !q ||
+        order.customerName.toLowerCase().includes(q) ||
+        order.id.toLowerCase().includes(q) ||
+        order.modelNumber.toLowerCase().includes(q) ||
+        order.address.toLowerCase().includes(q);
+      return matchFilter && matchSearch;
+    });
+  }, [activeFilter, searchQuery, todayOrders]);
 
-  const datesWithOrders = useMemo(() => {
-    const s = new Set<string>();
-    ALL_ORDERS.forEach((o) => s.add(o.date));
-    return s;
-  }, []);
-
-  const weekDates = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => {
-      const d = new Date(weekStart);
-      d.setDate(weekStart.getDate() + i);
-      return d;
-    }),
-    [weekStart],
-  );
-
-  const selectedStr = toDateStr(selectedDate);
-  const orders = getOrdersByDate(selectedStr);
-
-  const year = weekStart.getFullYear();
-  const month = weekStart.getMonth() + 1;
-  const monthOrderCount = ALL_ORDERS.filter((o) => {
-    const d = new Date(o.date);
-    return d.getFullYear() === year && d.getMonth() + 1 === month;
-  }).length;
-
-  function prevWeek() {
-    const s = new Date(weekStart);
-    s.setDate(s.getDate() - 7);
-    setWeekStart(s);
-    setSelectedDate(s);
-  }
-
-  function nextWeek() {
-    const s = new Date(weekStart);
-    s.setDate(s.getDate() + 7);
-    setWeekStart(s);
-    setSelectedDate(s);
-  }
-
-  const dateLabel = `${selectedDate.getMonth() + 1}/${selectedDate.getDate()}（${WEEKDAY_LABELS[selectedDate.getDay()]}）`;
+  const showTravelInfo = activeFilter === 'all' && !searchQuery;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="max-w-md mx-auto">
-
-        {/* Title */}
-        <div className="px-5 pt-12 pb-3">
-          <h1 className="text-3xl font-bold text-gray-900">排程日曆</h1>
+        <div className="px-5 pt-12 pb-4">
+          <h1 className="text-3xl font-bold text-gray-900">今日任務</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{TECHNICIAN_NAME} · {totalCount} 筆工單</p>
         </div>
 
-        {/* Month header */}
-        <div className="bg-gray-900 px-5 py-4 flex items-center justify-between">
-          <button onClick={prevWeek} className="p-1 text-white active:opacity-60">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <div className="text-center">
-            <p className="text-base font-bold text-white">{year} 年 {month} 月</p>
-            <p className="text-xs text-gray-400 mt-0.5">{monthOrderCount} 筆工單</p>
+        {/* Progress */}
+        <div className="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+          <div className="flex justify-between items-center mb-2.5">
+            <span className="text-sm text-gray-700">已完成 {completedCount} / {totalCount} 筆</span>
+            <span className="text-sm text-gray-400">{progressPct}%</span>
           </div>
-          <button onClick={nextWeek} className="p-1 text-white active:opacity-60">
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Week strip */}
-        <div className="bg-white border-b border-gray-100 px-4 pt-3 pb-4">
-          <div className="grid grid-cols-7 text-center mb-2">
-            {WEEKDAY_LABELS.map((d) => (
-              <span key={d} className="text-xs text-gray-400">{d}</span>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 text-center">
-            {weekDates.map((d) => {
-              const ds = toDateStr(d);
-              const isSelected = ds === selectedStr;
-              const hasOrders = datesWithOrders.has(ds);
-              return (
-                <button
-                  key={ds}
-                  onClick={() => setSelectedDate(new Date(d))}
-                  className="flex flex-col items-center gap-1 py-1"
-                >
-                  <span className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold transition-colors ${
-                    isSelected ? 'bg-gray-900 text-white' : 'text-gray-700'
-                  }`}>
-                    {d.getDate()}
-                  </span>
-                  <span className={`w-1.5 h-1.5 rounded-full ${hasOrders && !isSelected ? 'bg-gray-400' : 'invisible'}`} />
-                </button>
-              );
-            })}
+          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gray-700 rounded-full transition-all duration-500"
+              style={{ width: `${progressPct}%` }}
+            />
           </div>
         </div>
 
-        {/* Date label */}
-        <div className="px-5 pt-4 pb-3">
-          <p className="text-sm font-semibold text-gray-700">{dateLabel}</p>
+        {/* Search */}
+        <div className="mx-5 mb-4">
+          <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2.5">
+            <Search className="w-4 h-4 text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="搜尋工單或客戶..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="flex-1 text-sm bg-transparent outline-none text-gray-700 placeholder-gray-400"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')}>
+                <X className="w-4 h-4 text-gray-400" />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Filter tabs */}
+        <div className="px-5 mb-4 flex gap-2 overflow-x-auto no-scrollbar">
+          {FILTER_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setActiveFilter(tab.value)}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                activeFilter === tab.value
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-white text-gray-600 border border-gray-200'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
 
         {/* Order list */}
         <div className="px-5 flex flex-col gap-4">
-          {orders.length === 0 ? (
-            <div className="py-16 text-center text-gray-400 text-sm">此日無工單</div>
+          {filteredOrders.length === 0 ? (
+            <div className="py-16 text-center text-gray-400 text-sm">沒有符合條件的工單</div>
           ) : (
-            orders.map((order) => <OrderCard key={order.id} order={order} />)
+            filteredOrders.map((order, idx) => {
+              const originalIdx = todayOrders.findIndex((o) => o.id === order.id);
+              const travel = TRAVEL_INFO[originalIdx];
+              const isLast = idx === filteredOrders.length - 1;
+              return (
+                <div key={order.id}>
+                  <OrderCard order={order} />
+                  {!isLast && travel && showTravelInfo && (
+                    <div className="flex items-center gap-3 pt-4">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <span className="flex items-center gap-1 text-xs text-gray-400 shrink-0">
+                        <Navigation className="w-3 h-3" />
+                        約 {travel.minutes} 分鐘 · {travel.km} 公里
+                      </span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+                  )}
+                </div>
+              );
+            })
           )}
         </div>
-
       </div>
       <BottomNav />
     </div>
