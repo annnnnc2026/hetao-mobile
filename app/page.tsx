@@ -42,27 +42,30 @@ export default function TodayPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24">
       <div className="max-w-md mx-auto">
-        <div className="px-5 pt-12 pb-4">
-          <h1 className="text-3xl font-bold text-gray-900">今日任務</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{TECHNICIAN_NAME} · {totalCount} 筆工單</p>
-        </div>
 
-        {/* Progress */}
-        <div className="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-          <div className="flex justify-between items-center mb-2.5">
-            <span className="text-sm text-gray-700">已完成 {completedCount} / {totalCount} 筆</span>
-            <span className="text-sm text-gray-400">{progressPct}%</span>
+        {/* Sticky header */}
+        <div className="sticky top-0 z-30 bg-gray-50">
+          <div className="px-5 pt-12 pb-4">
+            <h1 className="text-3xl font-bold text-gray-900">今日任務</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{TECHNICIAN_NAME} · {totalCount} 筆工單</p>
           </div>
-          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gray-700 rounded-full transition-all duration-500"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
 
-        {/* Search */}
-        <div className="mx-5 mb-4">
+          {/* Progress */}
+          <div className="mx-5 mb-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-2.5">
+              <span className="text-sm text-gray-700">已完成 {completedCount} / {totalCount} 筆</span>
+              <span className="text-sm text-gray-400">{progressPct}%</span>
+            </div>
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gray-700 rounded-full transition-all duration-500"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Search */}
+          <div className="mx-5 mb-4">
           <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2.5">
             <Search className="w-4 h-4 text-gray-400 shrink-0" />
             <input
@@ -79,6 +82,7 @@ export default function TodayPage() {
             )}
           </div>
         </div>
+        </div>{/* end sticky */}
 
         {/* Filter tabs */}
         <div className="px-5 mb-4 flex gap-2 overflow-x-auto no-scrollbar">
