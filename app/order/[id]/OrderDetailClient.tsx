@@ -7,9 +7,9 @@ import {
   User, Tag, AlertCircle, Wrench, FileText, DollarSign,
   CalendarDays, Clock, Radio, MapPin, Camera, X,
   CheckCircle2, RotateCcw, Timer, ClipboardList, Truck, Package,
-  History, Hash, PenLine, Download, QrCode,
+  History, Hash, PenLine, Download, QrCode, ChevronDown, Check,
 } from 'lucide-react';
-import { getOrderById, MachineBuilding, MachineFloor } from '@/lib/data';
+import { getOrderById, MachineBuilding, MachineFloor, FloorMachine } from '@/lib/data';
 import StatusBadge from '@/components/StatusBadge';
 import PriorityBadge from '@/components/PriorityBadge';
 import ServiceTypeBadge from '@/components/ServiceTypeBadge';
@@ -185,6 +185,73 @@ function NotifDot() {
   );
 }
 
+// ─── Machine multi-select dropdown ────────────────────────────────────────────
+function MachineDropdown({
+  machines,
+  selected,
+  onChange,
+}: {
+  machines: FloorMachine[];
+  selected: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const toggle = (id: string) => {
+    onChange(selected.includes(id) ? selected.filter((x) => x !== id) : [...selected, id]);
+  };
+
+  const label =
+    selected.length === 0
+      ? '請選擇機器'
+      : selected.length === machines.length
+      ? `全部 ${machines.length} 台`
+      : selected.length === 1
+      ? machines.find((m) => m.id === selected[0])?.machineNo ?? '1 台'
+      : `已選 ${selected.length} 台`;
+
+  return (
+    <div className="relative mb-3">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-medium text-gray-700 shadow-sm"
+      >
+        <span>{label}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden">
+            {machines.map((m) => {
+              const checked = selected.includes(m.id);
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => toggle(m.id)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-50 last:border-0"
+                >
+                  <div className={`w-4.5 h-4.5 rounded flex items-center justify-center border ${checked ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                    {checked && <Check className="w-3 h-3 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-gray-900">{m.machineNo}</p>
+                    <p className="text-xs text-gray-400 truncate">{m.modelNumber}{m.specialNote ? ` · ${m.specialNote}` : ''}</p>
+                  </div>
+                  {m.needsService && (
+                    <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">待處理</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function OrderDetailClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -196,10 +263,16 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>(buildings[0]?.id ?? '');
   const [selectedFloorId, setSelectedFloorId] = useState<string>(buildings[0]?.floors[0]?.id ?? '');
+  const [selectedMachineIds, setSelectedMachineIds] = useState<string[]>(() => {
+    const firstFloor = buildings[0]?.floors[0];
+    if (firstFloor?.machines?.length) return [firstFloor.machines[0].id];
+    return [];
+  });
 
   const selectedBuilding = buildings.find((b) => b.id === selectedBuildingId) ?? buildings[0] ?? null;
   const selectedFloor: MachineFloor | null =
     selectedBuilding?.floors.find((f) => f.id === selectedFloorId) ?? selectedBuilding?.floors[0] ?? null;
+  const floorMachines: FloorMachine[] = selectedFloor?.machines ?? [];
 
   const [sheet, setSheet] = useState<'none' | 'arrived' | 'delay' | 'transfer' | 'complete'>('none');
   const [activeTab, setActiveTab] = useState<TabKey>('maintenance');
@@ -232,7 +305,15 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   function handleBuildingSelect(buildingId: string) {
     const b = buildings.find((x) => x.id === buildingId);
     setSelectedBuildingId(buildingId);
-    setSelectedFloorId(b?.floors[0]?.id ?? '');
+    const firstFloor = b?.floors[0];
+    setSelectedFloorId(firstFloor?.id ?? '');
+    setSelectedMachineIds(firstFloor?.machines?.length ? [firstFloor.machines[0].id] : []);
+  }
+
+  function handleFloorSelect(floorId: string) {
+    setSelectedFloorId(floorId);
+    const floor = selectedBuilding?.floors.find((f) => f.id === floorId);
+    setSelectedMachineIds(floor?.machines?.length ? [floor.machines[0].id] : []);
   }
 
   return (
@@ -326,7 +407,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                       return (
                         <button
                           key={floor.id}
-                          onClick={() => setSelectedFloorId(floor.id)}
+                          onClick={() => handleFloorSelect(floor.id)}
                           className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                             isActive
                               ? 'bg-blue-600 text-white'
@@ -337,6 +418,17 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                         </button>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* 機器選擇下拉（同一區多台）*/}
+                {floorMachines.length > 0 && (
+                  <div className="mt-2">
+                    <MachineDropdown
+                      machines={floorMachines}
+                      selected={selectedMachineIds}
+                      onChange={setSelectedMachineIds}
+                    />
                   </div>
                 )}
               </div>
