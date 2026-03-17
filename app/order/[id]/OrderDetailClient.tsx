@@ -422,7 +422,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                               : 'bg-gray-100 text-gray-500'
                           }`}
                         >
-                          {floor.label}
+                          {floor.machineNo}
                         </button>
                       );
                     })}
