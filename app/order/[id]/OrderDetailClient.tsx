@@ -293,6 +293,10 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
   // Delivery tab
   const [deliveryPayment, setDeliveryPayment] = useState('現金');
+  const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);      // 基本資料預設收起
+  const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false); // 付款方式展開
+  const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const [prepaidDate, setPrepaidDate] = useState('2026 年 03 月 15 日');
 
   // All machines across all buildings (for stats + complete sheet)
   const allBuildingMachines = buildings.flatMap((b) =>
@@ -538,51 +542,35 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             {/* ─── 送貨單 tab ─── */}
             {activeTab === 'delivery' && (
               <>
-                {/* 基本資訊 */}
-                <Section
-                  title="基本資訊"
-                  action={
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold">
-                      <Download className="w-3.5 h-3.5" />
-                      PDF 版本
-                    </button>
-                  }
-                >
-                  <InfoField icon={User}         label="客戶名稱"     value={order.customerName} fullWidth />
-                  <InfoField icon={User}         label="承辦人"       value={order.contactName} />
-                  <InfoField icon={Phone}        label="電話"         value={order.phone} href={`tel:${order.phone}`} />
-                  <InfoField icon={MapPin}       label="收款地址"     value={order.address} fullWidth />
-                  <InfoField icon={Hash}         label="統編"         value="39503759" />
-                  <InfoField icon={CalendarDays} label="日期"         value={order.date} />
-                  <InfoField icon={QrCode}       label="客戶卡號（機號）" value={order.cardNo} fullWidth />
-                </Section>
-
-                {/* 付款方式 */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
-                  <h3 className="text-base font-bold text-gray-900 mb-3">付款方式</h3>
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3 pb-0.5">
-                    {['現金', '刷卡', 'LinePay', '支票', '未收', '合約'].map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => setDeliveryPayment(m)}
-                        className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                          deliveryPayment === m
-                            ? 'bg-gray-900 text-white'
-                            : 'bg-white text-gray-600 border border-gray-200'
-                        }`}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400 mb-2">已預收</p>
-                  <div className="bg-blue-50 rounded-xl px-4 py-3">
-                    <p className="text-xs text-blue-400 mb-1">預計收款日期（未收適用）</p>
-                    <p className="text-base font-semibold text-blue-600">2026 年 03 月 15 日</p>
-                  </div>
+                {/* 1. 基本資料（預設收起） */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-3">
+                  <button
+                    onClick={() => setDeliveryInfoOpen((v) => !v)}
+                    className="w-full flex items-center justify-between px-4 py-3.5"
+                  >
+                    <h3 className="text-base font-bold text-gray-900">基本資料</h3>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600">
+                        <Download className="w-3 h-3" />
+                        PDF
+                      </span>
+                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${deliveryInfoOpen ? 'rotate-180' : ''}`} />
+                    </div>
+                  </button>
+                  {deliveryInfoOpen && (
+                    <div className="px-4 pb-4 grid grid-cols-2 gap-3 border-t border-gray-50 pt-3">
+                      <InfoField icon={User}         label="客戶名稱"        value={order.customerName} fullWidth />
+                      <InfoField icon={User}         label="承辦人"          value={order.contactName} />
+                      <InfoField icon={Phone}        label="電話"            value={order.phone} href={`tel:${order.phone}`} />
+                      <InfoField icon={MapPin}       label="收款地址"        value={order.address} fullWidth />
+                      <InfoField icon={Hash}         label="統編"            value="39503759" />
+                      <InfoField icon={CalendarDays} label="日期"            value={order.date} />
+                      <InfoField icon={QrCode}       label="客戶卡號（機號）" value={order.cardNo} fullWidth />
+                    </div>
+                  )}
                 </div>
 
-                {/* 用料清單 */}
+                {/* 2. 用料清單 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
                   <h3 className="text-base font-bold text-gray-900 mb-3">用料清單</h3>
                   <div className="flex items-center text-xs text-gray-400 pb-2 border-b border-gray-100">
@@ -606,7 +594,58 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
 
-                {/* 備註 */}
+                {/* 3. 付款方式 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  {/* 標題列：選中方式 + 展開 icon */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold text-gray-900">付款方式</h3>
+                    <button
+                      onClick={() => setDeliveryPaymentOpen((v) => !v)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700"
+                    >
+                      {deliveryPayment}
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${deliveryPaymentOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* 展開：其他選項 */}
+                  {deliveryPaymentOpen && (
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {['現金', '刷卡', 'Line Pay', '支票'].map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => { setDeliveryPayment(m); setDeliveryPaymentOpen(false); }}
+                          className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                            deliveryPayment === m
+                              ? 'bg-gray-900 text-white'
+                              : 'bg-white text-gray-600 border border-gray-200'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 已預收 */}
+                  <div className="border-t border-gray-50 pt-3">
+                    <p className="text-xs text-gray-400 mb-2">已預收</p>
+                    <div className="bg-blue-50 rounded-xl px-4 py-3">
+                      <p className="text-xs text-blue-400 mb-1">已預收日期</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-base font-semibold text-blue-600">{prepaidDate}</p>
+                        <button
+                          onClick={() => setPrepaidDate(today)}
+                          className="text-xs font-semibold text-blue-500 bg-white px-2.5 py-1 rounded-lg border border-blue-100"
+                        >
+                          本日
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. 備註 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
                   <h3 className="text-base font-bold text-gray-900 mb-2">備註</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
@@ -614,7 +653,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   </p>
                 </div>
 
-                {/* 客戶簽章 */}
+                {/* 5. 客戶簽章 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
                   <h3 className="text-base font-bold text-gray-900 mb-3">客戶簽章</h3>
                   <div className="h-32 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-300">
