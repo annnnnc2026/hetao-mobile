@@ -549,13 +549,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                     className="w-full flex items-center justify-between px-4 py-3.5"
                   >
                     <h3 className="text-base font-bold text-gray-900">基本資料</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-gray-100 text-xs font-semibold text-gray-600">
-                        <Download className="w-3 h-3" />
-                        PDF
-                      </span>
-                      <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${deliveryInfoOpen ? 'rotate-180' : ''}`} />
-                    </div>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${deliveryInfoOpen ? 'rotate-180' : ''}`} />
                   </button>
                   {deliveryInfoOpen && (
                     <div className="px-4 pb-4 grid grid-cols-2 gap-3 border-t border-gray-50 pt-3">
