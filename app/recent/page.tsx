@@ -103,13 +103,8 @@ export default function RecentPage() {
   return (
     <div className="min-h-screen bg-gray-50 pb-24 flex flex-col">
       <div className="max-w-md mx-auto w-full flex flex-col flex-1">
-        {/* Page title */}
-        <div className="px-5 pt-12 pb-3 bg-gray-50">
-          <h1 className="text-xl font-bold text-gray-900">排程日曆</h1>
-        </div>
-
         {/* Dark month navigation header */}
-        <div className="bg-gray-800 text-white px-5 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-30 bg-gray-800 text-white px-5 py-4 flex items-center justify-between">
           <button onClick={prevMonth} className="p-1">
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -125,7 +120,7 @@ export default function RecentPage() {
         {/* Date strip */}
         <div
           ref={dateRowRef}
-          className="bg-white border-b border-gray-200 overflow-x-auto no-scrollbar"
+          className="sticky top-[72px] z-30 bg-white border-b border-gray-200 overflow-x-auto no-scrollbar"
         >
           <div className="flex px-2 py-3 gap-1 min-w-max">
             {windowDays.map((d) => {

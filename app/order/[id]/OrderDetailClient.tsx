@@ -7,9 +7,9 @@ import {
   User, Tag, AlertCircle, Wrench, FileText, DollarSign,
   CalendarDays, Clock, Radio, MapPin, Camera, X,
   CheckCircle2, RotateCcw, Timer, ClipboardList, Truck, Package,
-  History, Hash, PenLine, Download, QrCode,
+  History, Hash, PenLine, Download, QrCode, ChevronDown, Check,
 } from 'lucide-react';
-import { getOrderById, MachineBuilding, MachineFloor } from '@/lib/data';
+import { getOrderById, MachineBuilding, MachineFloor, FloorMachine } from '@/lib/data';
 import StatusBadge from '@/components/StatusBadge';
 import PriorityBadge from '@/components/PriorityBadge';
 import ServiceTypeBadge from '@/components/ServiceTypeBadge';
@@ -101,7 +101,7 @@ function TabBar({ active, onChange }: { active: TabKey; onChange: (t: TabKey) =>
   const tabs: { key: TabKey; label: string; Icon: React.ComponentType<{ className?: string }> }[] = [
     { key: 'maintenance', label: '保養卡資訊', Icon: ClipboardList },
     { key: 'delivery',    label: '送貨單',    Icon: Truck },
-    { key: 'parts',       label: '領進料',    Icon: Package },
+    { key: 'parts',       label: '用料記錄',    Icon: Package },
   ];
   return (
     <div className="bg-gray-100 rounded-2xl p-1 flex gap-1 mb-3">
@@ -185,6 +185,64 @@ function NotifDot() {
   );
 }
 
+// ─── Machine selector (single-select, click → open 保養卡 tab) ─────────────────
+function MachineSelector({
+  machines,
+  selectedId,
+  onSelect,
+}: {
+  machines: FloorMachine[];
+  selectedId: string;
+  onSelect: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = machines.find((m) => m.id === selectedId);
+
+  return (
+    <div className="relative mb-3">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm"
+      >
+        <span>{current?.machineNo ?? '選擇機器'}</span>
+        <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute left-0 right-0 mt-1.5 bg-white border border-gray-100 rounded-xl shadow-lg z-20 overflow-hidden">
+            {machines.map((m) => {
+              const isActive = selectedId === m.id;
+              return (
+                <button
+                  key={m.id}
+                  onClick={() => { onSelect(m.id); setOpen(false); }}
+                  className={`w-full flex items-center justify-between px-4 py-3 text-left transition-colors border-b border-gray-50 last:border-0 ${
+                    isActive ? 'bg-blue-50' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="min-w-0">
+                    <p className={`text-sm font-semibold ${isActive ? 'text-blue-600' : 'text-gray-900'}`}>
+                      {m.machineNo}
+                    </p>
+                    <p className="text-xs text-gray-400 truncate">
+                      {m.modelNumber}{m.specialNote ? ` · ${m.specialNote}` : ''}
+                    </p>
+                  </div>
+                  {m.needsService && (
+                    <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full ml-2">待處理</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ─── Main page ────────────────────────────────────────────────────────────────
 export default function OrderDetailClient({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -196,10 +254,14 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>(buildings[0]?.id ?? '');
   const [selectedFloorId, setSelectedFloorId] = useState<string>(buildings[0]?.floors[0]?.id ?? '');
+  const [selectedMachineId, setSelectedMachineId] = useState<string>(() =>
+    buildings[0]?.floors[0]?.machines?.[0]?.id ?? ''
+  );
 
   const selectedBuilding = buildings.find((b) => b.id === selectedBuildingId) ?? buildings[0] ?? null;
   const selectedFloor: MachineFloor | null =
     selectedBuilding?.floors.find((f) => f.id === selectedFloorId) ?? selectedBuilding?.floors[0] ?? null;
+  const floorMachines: FloorMachine[] = selectedFloor?.machines ?? [];
 
   const [sheet, setSheet] = useState<'none' | 'arrived' | 'delay' | 'transfer' | 'complete'>('none');
   const [activeTab, setActiveTab] = useState<TabKey>('maintenance');
@@ -212,13 +274,23 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const [transferReason, setTransferReason] = useState('');
   const [transferNote, setTransferNote] = useState('');
 
-  // Complete form
-  const [completeResult, setCompleteResult] = useState('');
-  const [completeNote, setCompleteNote] = useState('');
-  const [actualHours, setActualHours] = useState('0.5');
+  // Complete form — machine checkboxes
+  // Pre-confirmed done machines (mock: A棟 1F 全3台已完工，today done=3)
+  const [confirmedDoneIds, setConfirmedDoneIds] = useState<string[]>(['A1-M1', 'A1-M2', 'A1-M3']);
+  // Sheet-internal selection (initialised when sheet opens)
+  const [completeMachineIds, setCompleteMachineIds] = useState<string[]>([]);
 
   // Delivery tab
   const [deliveryPayment, setDeliveryPayment] = useState('現金');
+  const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);      // 基本資料預設收起
+  const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false); // 付款方式展開
+  const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const [prepaidDate, setPrepaidDate] = useState('2026 年 03 月 15 日');
+
+  // All machines across all buildings (for stats + complete sheet)
+  const allBuildingMachines = buildings.flatMap((b) =>
+    b.floors.flatMap((f) => (f.machines ?? []).map((m) => ({ building: b, floor: f, machine: m })))
+  );
 
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}`;
   const duration = order.durationHours === 0.5 ? '0.5 小時' : `${order.durationHours} 小時`;
@@ -232,7 +304,15 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   function handleBuildingSelect(buildingId: string) {
     const b = buildings.find((x) => x.id === buildingId);
     setSelectedBuildingId(buildingId);
-    setSelectedFloorId(b?.floors[0]?.id ?? '');
+    const firstFloor = b?.floors[0];
+    setSelectedFloorId(firstFloor?.id ?? '');
+    setSelectedMachineId(firstFloor?.machines?.[0]?.id ?? '');
+  }
+
+  function handleFloorSelect(floorId: string) {
+    setSelectedFloorId(floorId);
+    const floor = selectedBuilding?.floors.find((f) => f.id === floorId);
+    setSelectedMachineId(floor?.machines?.[0]?.id ?? '');
   }
 
   return (
@@ -268,11 +348,9 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
             {/* ─── 統計概覽 ─── */}
             {(() => {
-              const today = new Date().toISOString().split('T')[0];
-              const totalMachines = buildings.flatMap((b) => b.floors).length || 5;
-              const todayDone = SERVICE_HISTORY.filter((h) => h.date === today && h.status === '已完成').length;
-              const todayPending = buildings.flatMap((b) => b.floors).filter((f) => f.needsService).length
-                || (totalMachines - todayDone > 0 ? totalMachines - todayDone : 0);
+              const totalMachines = allBuildingMachines.length || buildings.flatMap((b) => b.floors).length || 5;
+              const todayDone = confirmedDoneIds.length;
+              const todayPending = Math.max(0, totalMachines - todayDone);
               return (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4">
                   <div className="grid grid-cols-3 divide-x divide-gray-100">
@@ -281,12 +359,12 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                       <span className="text-xs text-gray-400">設備總數</span>
                     </div>
                     <div className="flex flex-col items-center gap-0.5 py-4">
-                      <span className="text-2xl font-bold text-green-500">{todayDone}</span>
-                      <span className="text-xs text-gray-400">今日已完工</span>
-                    </div>
-                    <div className="flex flex-col items-center gap-0.5 py-4">
                       <span className="text-2xl font-bold text-amber-500">{todayPending}</span>
                       <span className="text-xs text-gray-400">今日待處理</span>
+                    </div>
+                    <div className="flex flex-col items-center gap-0.5 py-4">
+                      <span className="text-2xl font-bold text-green-500">{todayDone}</span>
+                      <span className="text-xs text-gray-400">今日已完工</span>
                     </div>
                   </div>
                 </div>
@@ -301,20 +379,18 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 {/* 建築名稱 tabs */}
                 <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none mb-2">
                   {buildings.map((building) => {
-                    const hasAlert = building.floors.some((f) => f.needsService);
                     const isActive = selectedBuildingId === building.id;
                     return (
                       <button
                         key={building.id}
                         onClick={() => handleBuildingSelect(building.id)}
-                        className={`relative shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
+                        className={`shrink-0 px-3 py-1 rounded-lg text-xs font-semibold transition-colors ${
                           isActive
                             ? 'bg-gray-900 text-white'
                             : 'bg-gray-100 text-gray-500'
                         }`}
                       >
                         {building.name}
-                        {hasAlert && <NotifDot />}
                       </button>
                     );
                   })}
@@ -328,18 +404,31 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                       return (
                         <button
                           key={floor.id}
-                          onClick={() => setSelectedFloorId(floor.id)}
-                          className={`relative px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+                          onClick={() => handleFloorSelect(floor.id)}
+                          className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                             isActive
                               ? 'bg-blue-600 text-white'
                               : 'bg-gray-100 text-gray-500'
                           }`}
                         >
-                          {floor.label}
-                          {floor.needsService && <NotifDot />}
+                          {floor.label}{(floor.machines?.length ?? 0) > 0 ? `(${floor.machines!.length}台)` : ''}
                         </button>
                       );
                     })}
+                  </div>
+                )}
+
+                {/* 機器選擇（單選，點機號跳保養卡 tab）*/}
+                {floorMachines.length > 0 && (
+                  <div className="mt-2">
+                    <MachineSelector
+                      machines={floorMachines}
+                      selectedId={selectedMachineId}
+                      onSelect={(id) => {
+                        setSelectedMachineId(id);
+                        setActiveTab('maintenance');
+                      }}
+                    />
                   </div>
                 )}
               </div>
@@ -445,51 +534,29 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             {/* ─── 送貨單 tab ─── */}
             {activeTab === 'delivery' && (
               <>
-                {/* 基本資訊 */}
-                <Section
-                  title="基本資訊"
-                  action={
-                    <button className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-900 text-white text-xs font-semibold">
-                      <Download className="w-3.5 h-3.5" />
-                      PDF 版本
-                    </button>
-                  }
-                >
-                  <InfoField icon={User}         label="客戶名稱"     value={order.customerName} fullWidth />
-                  <InfoField icon={User}         label="承辦人"       value={order.contactName} />
-                  <InfoField icon={Phone}        label="電話"         value={order.phone} href={`tel:${order.phone}`} />
-                  <InfoField icon={MapPin}       label="收款地址"     value={order.address} fullWidth />
-                  <InfoField icon={Hash}         label="統編"         value="39503759" />
-                  <InfoField icon={CalendarDays} label="日期"         value={order.date} />
-                  <InfoField icon={QrCode}       label="客戶卡號（機號）" value={order.cardNo} fullWidth />
-                </Section>
-
-                {/* 付款方式 */}
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
-                  <h3 className="text-base font-bold text-gray-900 mb-3">付款方式</h3>
-                  <div className="flex gap-2 overflow-x-auto no-scrollbar mb-3 pb-0.5">
-                    {['現金', '刷卡', 'LinePay', '支票', '未收', '合約'].map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => setDeliveryPayment(m)}
-                        className={`shrink-0 px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                          deliveryPayment === m
-                            ? 'bg-gray-900 text-white'
-                            : 'bg-white text-gray-600 border border-gray-200'
-                        }`}
-                      >
-                        {m}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-xs text-gray-400 mb-2">已預收</p>
-                  <div className="bg-blue-50 rounded-xl px-4 py-3">
-                    <p className="text-xs text-blue-400 mb-1">預計收款日期（未收適用）</p>
-                    <p className="text-base font-semibold text-blue-600">2026 年 03 月 15 日</p>
-                  </div>
+                {/* 1. 基本資料（預設收起） */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-3">
+                  <button
+                    onClick={() => setDeliveryInfoOpen((v) => !v)}
+                    className="w-full flex items-center justify-between px-4 py-3.5"
+                  >
+                    <h3 className="text-base font-bold text-gray-900">基本資料</h3>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${deliveryInfoOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  {deliveryInfoOpen && (
+                    <div className="px-4 pb-4 grid grid-cols-2 gap-3 border-t border-gray-50 pt-3">
+                      <InfoField icon={User}         label="客戶名稱"        value={order.customerName} fullWidth />
+                      <InfoField icon={User}         label="承辦人"          value={order.contactName} />
+                      <InfoField icon={Phone}        label="電話"            value={order.phone} href={`tel:${order.phone}`} />
+                      <InfoField icon={MapPin}       label="收款地址"        value={order.address} fullWidth />
+                      <InfoField icon={Hash}         label="統編"            value="39503759" />
+                      <InfoField icon={CalendarDays} label="日期"            value={order.date} />
+                      <InfoField icon={QrCode}       label="客戶卡號（機號）" value={order.cardNo} fullWidth />
+                    </div>
+                  )}
                 </div>
 
-                {/* 用料清單 */}
+                {/* 2. 用料清單 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
                   <h3 className="text-base font-bold text-gray-900 mb-3">用料清單</h3>
                   <div className="flex items-center text-xs text-gray-400 pb-2 border-b border-gray-100">
@@ -513,7 +580,58 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   </div>
                 </div>
 
-                {/* 備註 */}
+                {/* 3. 付款方式 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  {/* 標題列：選中方式 + 展開 icon */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold text-gray-900">付款方式</h3>
+                    <button
+                      onClick={() => setDeliveryPaymentOpen((v) => !v)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700"
+                    >
+                      {deliveryPayment}
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${deliveryPaymentOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* 展開：其他選項 */}
+                  {deliveryPaymentOpen && (
+                    <div className="flex gap-2 mb-3 flex-wrap">
+                      {['現金', '刷卡', 'Line Pay', '支票'].map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => { setDeliveryPayment(m); setDeliveryPaymentOpen(false); }}
+                          className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                            deliveryPayment === m
+                              ? 'bg-gray-900 text-white'
+                              : 'bg-white text-gray-600 border border-gray-200'
+                          }`}
+                        >
+                          {m}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* 已預收 */}
+                  <div className="border-t border-gray-50 pt-3">
+                    <p className="text-xs text-gray-400 mb-2">已預收</p>
+                    <div className="bg-blue-50 rounded-xl px-4 py-3">
+                      <p className="text-xs text-blue-400 mb-1">已預收日期</p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-base font-semibold text-blue-600">{prepaidDate}</p>
+                        <button
+                          onClick={() => setPrepaidDate(today)}
+                          className="text-xs font-semibold text-blue-500 bg-white px-2.5 py-1 rounded-lg border border-blue-100"
+                        >
+                          本日
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. 備註 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
                   <h3 className="text-base font-bold text-gray-900 mb-2">備註</h3>
                   <p className="text-sm text-gray-600 leading-relaxed">
@@ -521,7 +639,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   </p>
                 </div>
 
-                {/* 客戶簽章 */}
+                {/* 5. 客戶簽章 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
                   <h3 className="text-base font-bold text-gray-900 mb-3">客戶簽章</h3>
                   <div className="h-32 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-300">
@@ -614,7 +732,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             轉派
           </button>
           <button
-            onClick={() => setSheet('complete')}
+            onClick={() => { setCompleteMachineIds(allBuildingMachines.map((x) => x.machine.id)); setSheet('complete'); }}
             className="flex-[2] py-3.5 rounded-2xl bg-green-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5"
           >
             <CheckCircle2 className="w-4 h-4" />
@@ -640,7 +758,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-blue-700 font-medium">{order.address}</p>
               </div>
               <button
-                onClick={() => setSheet('complete')}
+                onClick={() => { setCompleteMachineIds(allBuildingMachines.map((x) => x.machine.id)); setSheet('complete'); }}
                 className="w-full py-3.5 rounded-xl text-sm font-semibold bg-green-500 text-white flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
@@ -703,46 +821,80 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
       </BottomSheet>
 
       {/* ─── Complete sheet ───────────────────────────────────────────── */}
-      <BottomSheet open={sheet === 'complete'} title="完成回報" onClose={() => setSheet('none')}>
-        <PillGroup
-          label="處理結果"
-          options={['已完成', '部分完成', '無法處理', '客戶不在']}
-          value={completeResult}
-          onChange={setCompleteResult}
-        />
-        <div className="mb-5">
-          <p className="text-xs text-gray-500 mb-2">處理說明</p>
-          <textarea
-            rows={3}
-            placeholder="簡述處理過程或發現..."
-            value={completeNote}
-            onChange={(e) => setCompleteNote(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none resize-none"
-          />
-        </div>
-        <div className="mb-5">
-          <p className="text-xs text-gray-500 mb-2">實際工時（小時）</p>
-          <input
-            type="number"
-            step="0.5"
-            min="0"
-            value={actualHours}
-            onChange={(e) => setActualHours(e.target.value)}
-            className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 outline-none"
-          />
-        </div>
-        <div className="mb-5">
-          <p className="text-xs text-gray-500 mb-2">現場照片（最多 5 張）</p>
-          <button className="w-28 h-28 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 bg-white">
-            <Camera className="w-6 h-6" />
-            <span className="text-xs">拍照</span>
+      <BottomSheet open={sheet === 'complete'} title="完成工單" onClose={() => setSheet('none')}>
+        <p className="text-xs text-gray-400 mb-4">請勾選本次已完成保養的機器</p>
+
+        {/* Group by building → floor */}
+        {buildings.map((b) => (
+          <div key={b.id} className="mb-4">
+            {b.floors.filter((f) => (f.machines ?? []).length > 0).map((f) => (
+              <div key={f.id} className="mb-3">
+                <p className="text-xs font-semibold text-gray-400 mb-2 px-1">
+                  {b.name} · {f.label}
+                </p>
+                <div className="rounded-xl overflow-hidden border border-gray-100">
+                  {(f.machines ?? []).map((m, idx, arr) => {
+                    const checked = completeMachineIds.includes(m.id);
+                    return (
+                      <button
+                        key={m.id}
+                        onClick={() =>
+                          setCompleteMachineIds((prev) =>
+                            checked ? prev.filter((x) => x !== m.id) : [...prev, m.id]
+                          )
+                        }
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                          idx < arr.length - 1 ? 'border-b border-gray-50' : ''
+                        } ${checked ? 'bg-green-50' : 'bg-white'}`}
+                      >
+                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
+                          checked ? 'bg-green-500 border-green-500' : 'border-gray-300'
+                        }`}>
+                          {checked && <Check className="w-3 h-3 text-white" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900">{m.machineNo}</p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {m.modelNumber}{m.specialNote ? ` · ${m.specialNote}` : ''}
+                          </p>
+                        </div>
+                        {m.needsService && (
+                          <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">待處理</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ))}
+
+        <div className="flex items-center justify-between text-xs text-gray-400 mb-4 px-1">
+          <span>已選 {completeMachineIds.length} 台</span>
+          <button
+            onClick={() =>
+              setCompleteMachineIds(
+                completeMachineIds.length === allBuildingMachines.length
+                  ? []
+                  : allBuildingMachines.map((x) => x.machine.id)
+              )
+            }
+            className="text-blue-500 font-medium"
+          >
+            {completeMachineIds.length === allBuildingMachines.length ? '取消全選' : '全選'}
           </button>
         </div>
+
         <button
-          disabled={!completeResult}
+          disabled={completeMachineIds.length === 0}
+          onClick={() => {
+            setConfirmedDoneIds(completeMachineIds);
+            setSheet('none');
+          }}
           className="w-full py-3.5 rounded-xl text-sm font-semibold transition-colors disabled:bg-gray-100 disabled:text-gray-400 enabled:bg-gray-900 enabled:text-white"
         >
-          提交回報
+          確認完成（{completeMachineIds.length} 台）
         </button>
       </BottomSheet>
     </>

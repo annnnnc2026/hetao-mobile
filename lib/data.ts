@@ -4,6 +4,15 @@ export type Priority = '急件' | '緊急' | null;
 export type CustomerType = '商用' | '家用' | '公家機關' | '醫療' | '共約';
 export type PaymentMethod = '月結' | '現金' | '信用卡' | '匯款';
 
+export interface FloorMachine {
+  id: string;
+  machineNo: string;
+  modelNumber: string;
+  workDescription: string | null;
+  specialNote: string | null;
+  needsService: boolean;
+}
+
 export interface MachineFloor {
   id: string;
   label: string;           // e.g. "4F 會議室"
@@ -12,6 +21,7 @@ export interface MachineFloor {
   modelNumber: string;
   workDescription: string | null;
   specialNote: string | null;
+  machines?: FloorMachine[];
 }
 
 export interface MachineBuilding {
@@ -91,16 +101,44 @@ export const ALL_ORDERS: WorkOrder[] = [
         id: 'A',
         name: 'A棟',
         floors: [
-          { id: 'A-1F', label: '1F 接待大廳', needsService: false, machineNo: 'A1-0023', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null },
-          { id: 'A-2F', label: '2F 辦公區', needsService: false, machineNo: 'A2-0041', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null },
+          {
+            id: 'A-1F', label: '1F 接待大廳', needsService: false,
+            machineNo: '260304001', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
+            machines: [
+              { id: 'A1-M1', machineNo: '260304001', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
+              { id: 'A1-M2', machineNo: '260304002', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '靠牆第二台', needsService: false },
+              { id: 'A1-M3', machineNo: '260304003', modelNumber: 'UR7301CW-2', workDescription: null, specialNote: '接待台右側', needsService: false },
+            ],
+          },
+          {
+            id: 'A-2F', label: '2F 辦公區', needsService: false,
+            machineNo: '260304004', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
+            machines: [
+              { id: 'A2-M1', machineNo: '260304004', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
+              { id: 'A2-M2', machineNo: '260304005', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '茶水間角落', needsService: false },
+            ],
+          },
         ],
       },
       {
         id: 'B',
         name: 'B棟',
         floors: [
-          { id: 'B-3F', label: '3F 茶水間右側', needsService: true, machineNo: 'B3-0017', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記' },
-          { id: 'B-5F', label: '5F 主管室', needsService: false, machineNo: 'B5-0029', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null },
+          {
+            id: 'B-3F', label: '3F 茶水間右側', needsService: true,
+            machineNo: '260304006', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記',
+            machines: [
+              { id: 'B3-M1', machineNo: '260304006', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記', needsService: true },
+              { id: 'B3-M2', machineNo: '260304007', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '茶水間左側備用機', needsService: false },
+            ],
+          },
+          {
+            id: 'B-5F', label: '5F 主管室', needsService: false,
+            machineNo: '260304008', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
+            machines: [
+              { id: 'B5-M1', machineNo: '260304008', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
+            ],
+          },
         ],
       },
     ],
