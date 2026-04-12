@@ -4,32 +4,22 @@ import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
 import { ALL_ORDERS, getAvailableDates, TODAY, TECHNICIAN_NAME, WorkOrder } from '@/lib/data';
 
-function Check({ on }: { on: boolean }) {
-  return <span className={on ? 'text-gray-900 font-bold' : 'text-gray-200'}>✓</span>;
-}
-
-function mapOrder(o: WorkOrder, idx: number) {
-  const amount = o.serviceAmount ?? 0;
-  return {
-    idx: idx + 1,
-    customerName: o.customerName,
-    modelNumber: o.modelNumber,
-    deviceCount: o.deviceCount,
-    serviceAmount: amount,
-    isInstall: o.serviceType === '裝機' || o.serviceType === '安裝',
-    isRepair: o.serviceType === '維修',
-    isCollection: amount > 0,
-    isCash: o.paymentMethod === '現金' || o.paymentMethod === '信用卡',
-    isBill: o.paymentMethod === '匯款',
-    isAccount: o.paymentMethod === '月結',
-    isFree: amount === 0,
-    note: o.specialNote ?? '',
-  };
-}
-
 function formatDate(d: string) {
   const [y, m, day] = d.split('-');
   return `${y} 年 ${parseInt(m)} 月 ${parseInt(day)} 日`;
+}
+
+function getChecks(o: WorkOrder) {
+  const amount = o.serviceAmount ?? 0;
+  const checks: string[] = [];
+  if (o.serviceType === '裝機' || o.serviceType === '安裝') checks.push('安裝');
+  if (o.serviceType === '維修') checks.push('維修');
+  if (amount > 0) checks.push('收款');
+  if (o.paymentMethod === '現金' || o.paymentMethod === '信用卡') checks.push('現金');
+  if (o.paymentMethod === '匯款') checks.push('票據');
+  if (o.paymentMethod === '月結') checks.push('應帳');
+  if (amount === 0) checks.push('免費');
+  return checks;
 }
 
 export default function ReportPage() {
@@ -37,81 +27,79 @@ export default function ReportPage() {
   const [selectedDate, setSelectedDate] = useState(TODAY);
 
   const orders = ALL_ORDERS.filter((o) => o.date === selectedDate);
-  const rows = orders.map(mapOrder);
-  const total = rows.reduce((s, r) => s + r.serviceAmount, 0);
+  const total = orders.reduce((s, o) => s + (o.serviceAmount ?? 0), 0);
 
   return (
     <>
       <div className="max-w-md mx-auto px-4 pt-6 pb-28">
 
         {/* 標題 */}
-        <div className="text-center mb-5">
-          <h1 className="text-base font-bold text-gray-900 tracking-wide">（個人）營業日報表</h1>
-          <p className="text-xs text-gray-400 mt-1">業務員：{TECHNICIAN_NAME}</p>
+        <div className="mb-4">
+          <h1 className="text-base font-bold text-gray-900">（個人）營業日報表</h1>
+          <p className="text-xs text-gray-400 mt-0.5">業務員：{TECHNICIAN_NAME}</p>
         </div>
 
         {/* 日期選擇 */}
-        <div className="flex items-center gap-3 mb-5">
-          <span className="text-sm text-gray-500 shrink-0">日期</span>
-          <select
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="flex-1 text-sm font-medium text-gray-900 border border-gray-200 rounded-xl px-3 py-2 bg-white"
-          >
-            {dates.map((d) => (
-              <option key={d} value={d}>{formatDate(d)}</option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={selectedDate}
+          onChange={(e) => setSelectedDate(e.target.value)}
+          className="w-full text-sm font-medium text-gray-900 border border-gray-200 rounded-xl px-3 py-2.5 bg-white mb-4"
+        >
+          {dates.map((d) => (
+            <option key={d} value={d}>{formatDate(d)}</option>
+          ))}
+        </select>
 
-        {/* 表格（橫向捲動） */}
-        <div className="overflow-x-auto rounded-xl border border-gray-200 mb-4">
-          <table className="text-[11px] border-collapse" style={{ minWidth: 660 }}>
-            <thead>
-              <tr className="bg-gray-100 text-gray-600">
-                {['項次','摘要（公司行號）','品名','數量','金額','安裝','維修','收款','現金','票據','應帳','免費','備註'].map((h) => (
-                  <th key={h} className="border border-gray-200 px-2 py-2 text-center whitespace-nowrap font-medium">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.length === 0 ? (
-                <tr>
-                  <td colSpan={13} className="border border-gray-200 py-8 text-center text-gray-400 text-sm">
-                    當日無工單紀錄
-                  </td>
-                </tr>
-              ) : (
-                rows.map((r, i) => (
-                  <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                    <td className="border border-gray-200 px-2 py-2 text-center">{r.idx}</td>
-                    <td className="border border-gray-200 px-2 py-2 whitespace-nowrap">{r.customerName}</td>
-                    <td className="border border-gray-200 px-2 py-2 whitespace-nowrap">{r.modelNumber}</td>
-                    <td className="border border-gray-200 px-2 py-2 text-center">{r.deviceCount}</td>
-                    <td className="border border-gray-200 px-2 py-2 text-right whitespace-nowrap">
-                      {r.serviceAmount > 0 ? r.serviceAmount.toLocaleString() : '—'}
-                    </td>
-                    <td className="border border-gray-200 px-2 py-2 text-center"><Check on={r.isInstall} /></td>
-                    <td className="border border-gray-200 px-2 py-2 text-center"><Check on={r.isRepair} /></td>
-                    <td className="border border-gray-200 px-2 py-2 text-center"><Check on={r.isCollection} /></td>
-                    <td className="border border-gray-200 px-2 py-2 text-center"><Check on={r.isCash} /></td>
-                    <td className="border border-gray-200 px-2 py-2 text-center"><Check on={r.isBill} /></td>
-                    <td className="border border-gray-200 px-2 py-2 text-center"><Check on={r.isAccount} /></td>
-                    <td className="border border-gray-200 px-2 py-2 text-center"><Check on={r.isFree} /></td>
-                    <td className="border border-gray-200 px-2 py-2 min-w-[72px] text-gray-500">{r.note}</td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+        {/* 卡片清單 */}
+        <div className="flex flex-col gap-3 mb-4">
+          {orders.length === 0 ? (
+            <p className="text-center text-gray-400 text-sm py-10">當日無工單紀錄</p>
+          ) : (
+            orders.map((o, i) => {
+              const checks = getChecks(o);
+              return (
+                <div key={o.id} className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3">
+                  {/* 頂行：項次 + 客戶名 + 金額 */}
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-gray-400 shrink-0">#{i + 1}</span>
+                      <span className="text-sm font-semibold text-gray-900 leading-tight">{o.customerName}</span>
+                    </div>
+                    <span className="text-sm font-bold text-gray-900 shrink-0">
+                      {(o.serviceAmount ?? 0) > 0 ? `$${(o.serviceAmount!).toLocaleString()}` : '免費'}
+                    </span>
+                  </div>
+
+                  {/* 品名 + 數量 */}
+                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2.5">
+                    <span>{o.modelNumber}</span>
+                    <span className="text-gray-300">·</span>
+                    <span>數量 {o.deviceCount}</span>
+                  </div>
+
+                  {/* 勾選標籤 */}
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {checks.map((tag) => (
+                      <span key={tag} className="text-[11px] bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium">
+                        ✓ {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* 備註 */}
+                  {o.specialNote && (
+                    <p className="text-xs text-gray-400 border-t border-gray-50 pt-2 mt-1">{o.specialNote}</p>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* 當日銷貨合計 */}
-        <div className="flex items-center justify-between bg-gray-100 rounded-xl px-4 py-3">
-          <span className="text-sm font-medium text-gray-700">當日銷貨金額合計</span>
-          <span className="text-base font-bold text-gray-900">$ {total.toLocaleString()}</span>
+        <div className="flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3">
+          <span className="text-sm font-medium">當日銷貨金額合計</span>
+          <span className="text-base font-bold">$ {total.toLocaleString()}</span>
         </div>
 
       </div>
