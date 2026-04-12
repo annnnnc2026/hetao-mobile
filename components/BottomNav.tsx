@@ -2,12 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Calendar, ClipboardList, Package } from 'lucide-react';
+import { Calendar, ClipboardList, Package, BarChart2 } from 'lucide-react';
 
 const tabs = [
-  { href: '/recent',  label: '任務清單', Icon: Calendar },
+  { href: '/recent',  label: '近期派工', Icon: Calendar },
   { href: '/',        label: '今日派工', Icon: ClipboardList },
-  { href: '/profile', label: '餘料管理', Icon: Package },
+  { href: '/materials', label: '我的餘料', Icon: Package },
+  { href: '/report',  label: '營業日報表', Icon: BarChart2 },
 ];
 
 export default function BottomNav() {
