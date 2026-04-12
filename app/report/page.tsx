@@ -35,7 +35,7 @@ export default function ReportPage() {
 
         {/* 標題 */}
         <div className="mb-4">
-          <h1 className="text-base font-bold text-gray-900">（個人）營業日報表</h1>
+          <h1 className="text-base font-bold text-gray-900">營業日報表</h1>
           <p className="text-xs text-gray-400 mt-0.5">業務員：{TECHNICIAN_NAME}</p>
         </div>
 
