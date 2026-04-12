@@ -11,15 +11,27 @@ function formatDate(d: string) {
 
 function getChecks(o: WorkOrder) {
   const amount = o.serviceAmount ?? 0;
+  const isNoCharge = o.serviceType === '延卡' || o.serviceType === '退卡';
   const checks: string[] = [];
   if (o.serviceType === '裝機' || o.serviceType === '安裝') checks.push('安裝');
   if (o.serviceType === '維修') checks.push('維修');
-  if (amount > 0) checks.push('收款');
+  if (o.serviceType === '延卡') checks.push('延卡');
+  if (o.serviceType === '退卡') checks.push('退卡');
+  if (amount > 0 && !isNoCharge) checks.push('收款');
   if (o.paymentMethod === '現金' || o.paymentMethod === '信用卡') checks.push('現金');
   if (o.paymentMethod === '匯款') checks.push('票據');
   if (o.paymentMethod === '月結') checks.push('應帳');
-  if (amount === 0) checks.push('免費');
+  if (amount === 0 && !isNoCharge) checks.push('免費');
   return checks;
+}
+
+function AmountDisplay({ o }: { o: WorkOrder }) {
+  const amount = o.serviceAmount ?? 0;
+  if (o.serviceType === '延卡') return <span className="text-sm font-bold text-red-500 shrink-0">延卡</span>;
+  if (o.serviceType === '退卡') return <span className="text-sm font-bold text-red-500 shrink-0">退卡</span>;
+  if (o.paymentMethod === '月結') return <span className="text-sm font-bold text-blue-500 shrink-0">應帳</span>;
+  if (amount === 0) return <span className="text-sm font-bold text-gray-400 shrink-0">$0</span>;
+  return <span className="text-sm font-bold text-gray-900 shrink-0">${amount.toLocaleString()}</span>;
 }
 
 export default function ReportPage() {
@@ -65,9 +77,7 @@ export default function ReportPage() {
                       <span className="text-xs text-gray-400 shrink-0">#{i + 1}</span>
                       <span className="text-sm font-semibold text-gray-900 leading-tight">{o.customerName}</span>
                     </div>
-                    <span className="text-sm font-bold text-gray-900 shrink-0">
-                      {(o.serviceAmount ?? 0) > 0 ? `$${(o.serviceAmount!).toLocaleString()}` : '免費'}
-                    </span>
+                    <AmountDisplay o={o} />
                   </div>
 
                   {/* 品名 + 數量 */}
@@ -79,11 +89,19 @@ export default function ReportPage() {
 
                   {/* 勾選標籤 */}
                   <div className="flex flex-wrap gap-1.5 mb-2">
-                    {checks.map((tag) => (
-                      <span key={tag} className="text-[11px] bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium">
-                        ✓ {tag}
-                      </span>
-                    ))}
+                    {checks.map((tag) => {
+                      const isRed = tag === '延卡' || tag === '退卡';
+                      return (
+                        <span
+                          key={tag}
+                          className={`text-[11px] rounded-full px-2.5 py-0.5 font-medium ${
+                            isRed ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-600'
+                          }`}
+                        >
+                          ✓ {tag}
+                        </span>
+                      );
+                    })}
                   </div>
 
                   {/* 備註 */}

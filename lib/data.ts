@@ -1,5 +1,5 @@
 export type OrderStatus = '已指派' | '進行中' | '已完成' | '延期';
-export type ServiceType = '維修' | '保養' | '裝機' | '安裝' | '回收' | '送水' | '其他';
+export type ServiceType = '維修' | '保養' | '裝機' | '安裝' | '回收' | '送水' | '延卡' | '退卡' | '其他';
 export type Priority = '急件' | '緊急' | null;
 export type CustomerType = '商用' | '家用' | '公家機關' | '醫療' | '共約';
 export type PaymentMethod = '月結' | '現金' | '信用卡' | '匯款';
