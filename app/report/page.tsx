@@ -98,7 +98,7 @@ export default function ReportPage() {
                             isRed ? 'bg-red-50 text-red-500' : 'bg-gray-100 text-gray-600'
                           }`}
                         >
-                          ✓ {tag}
+                          {tag}
                         </span>
                       );
                     })}
