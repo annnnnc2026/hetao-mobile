@@ -9,16 +9,16 @@ function formatDate(d: string) {
 
 function getTags(o: WorkOrder): string[] {
   const tags: string[] = [];
-  if (o.serviceType === '維修') tags.push('維修');
-  if (o.serviceType === '裝機' || o.serviceType === '安裝') tags.push('裝機');
-  if (o.serviceType === '回收' || o.serviceType === '退卡') tags.push('回機');
+  if (o.serviceType === '設備故障' || o.serviceType === '維修') tags.push('維修');
+  if (o.serviceType === '設備安裝' || o.serviceType === '裝機' || o.serviceType === '安裝') tags.push('裝機');
+  if (o.serviceType === '設備回收搬運' || o.serviceType === '回收' || o.serviceType === '退卡') tags.push('回機');
   if ((o.serviceAmount ?? 0) > 0) tags.push('收款');
   return tags;
 }
 
 function AmountDisplay({ o }: { o: WorkOrder }) {
   const amount = o.serviceAmount ?? 0;
-  if (o.serviceType === '延卡') return <span className="text-sm font-bold text-red-500 shrink-0">延卡</span>;
+  if (o.serviceType === '延卡' || o.serviceType === '合約行政') return <span className="text-sm font-bold text-red-500 shrink-0">延卡</span>;
   if (o.serviceType === '退卡') return <span className="text-sm font-bold text-red-500 shrink-0">退卡</span>;
   if (o.paymentMethod === '月結') return <span className="text-sm font-bold text-blue-500 shrink-0">應帳</span>;
   if (amount === 0) return <span className="text-sm font-bold text-gray-400 shrink-0">$0</span>;
