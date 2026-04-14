@@ -55,7 +55,7 @@ export default function OrderCard({ order }: Props) {
           <div className="flex items-center gap-3 text-xs text-gray-400">
             <span className="flex items-center gap-1">
               <Wrench className="w-3.5 h-3.5" />
-              {order.erpNo}
+              設備機號：{order.erpNo}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="w-3.5 h-3.5" />
