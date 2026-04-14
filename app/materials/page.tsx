@@ -6,10 +6,9 @@ function calcBalances() {
   for (const t of MATERIAL_TRANSACTIONS) {
     balanceMap.set(t.materialNo, (balanceMap.get(t.materialNo) ?? 0) + t.qty);
   }
-  return MATERIALS.map((m) => ({
-    ...m,
-    balance: balanceMap.get(m.materialNo) ?? 0,
-  }));
+  return MATERIALS
+    .map((m) => ({ ...m, balance: balanceMap.get(m.materialNo) ?? 0 }))
+    .filter((m) => m.balance < 0);
 }
 
 export default function MaterialsPage() {

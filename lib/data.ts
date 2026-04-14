@@ -612,15 +612,18 @@ export interface MaterialTransaction {
 }
 
 export const MATERIAL_TRANSACTIONS: MaterialTransaction[] = [
-  // 今日
-  { id: 'mt01', materialNo: 'F-PP5',   machineNo: '',        qty: +5, type: '領料', timeLabel: '08:30 AM', date: TODAY },
-  { id: 'mt02', materialNo: 'F-CTO',   machineNo: '',        qty: +3, type: '領料', timeLabel: '08:30 AM', date: TODAY },
-  { id: 'mt03', materialNo: 'F-PP5',   machineNo: '109755', qty: -2, type: '消料', timeLabel: '10:00 AM', date: TODAY },
-  { id: 'mt04', materialNo: 'F-CTO',   machineNo: '109755', qty: -5, type: '消料', timeLabel: '11:30 AM', date: TODAY },
-  { id: 'mt05', materialNo: 'F-RO75',  machineNo: '109755', qty: -1, type: '消料', timeLabel: '12:15 PM', date: TODAY },
-  // 昨天
-  { id: 'mt06', materialNo: 'P-EMV12', machineNo: '',        qty: +1, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
-  { id: 'mt07', materialNo: 'P-OR-L',  machineNo: '',        qty: +6, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
-  { id: 'mt08', materialNo: 'P-OR-L',  machineNo: '102051', qty: -4, type: '消料', timeLabel: '昨天', date: '2026-03-03' },
-  { id: 'mt09', materialNo: 'P-EMV12', machineNo: '102051', qty: -1, type: '退料', timeLabel: '昨天', date: '2026-03-03' },
+  // F-CTO 活性碳濾芯：領3用5 → 欠2
+  { id: 'mt01', materialNo: 'F-CTO',   machineNo: '',        qty: +3, type: '領料', timeLabel: '08:30 AM', date: TODAY },
+  { id: 'mt02', materialNo: 'F-CTO',   machineNo: '109755', qty: -5, type: '消料', timeLabel: '11:30 AM', date: TODAY },
+  // F-RO75 RO逆滲透膜：只消料 → 欠1
+  { id: 'mt03', materialNo: 'F-RO75',  machineNo: '109755', qty: -1, type: '消料', timeLabel: '12:15 PM', date: TODAY },
+  // UF-583 5μPP濾芯：領1用2 → 欠1
+  { id: 'mt04', materialNo: 'UF-583',  machineNo: '',        qty: +1, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt05', materialNo: 'UF-583',  machineNo: '102051', qty: -2, type: '消料', timeLabel: '昨天', date: '2026-03-03' },
+  // UF-591 1μPP濾芯：領2用4 → 欠2
+  { id: 'mt06', materialNo: 'UF-591',  machineNo: '',        qty: +2, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt07', materialNo: 'UF-591',  machineNo: '102063', qty: -4, type: '消料', timeLabel: '昨天', date: '2026-03-03' },
+  // P-OR-L O型環：領3用4 → 欠1
+  { id: 'mt08', materialNo: 'P-OR-L',  machineNo: '',        qty: +3, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt09', materialNo: 'P-OR-L',  machineNo: '102051', qty: -4, type: '消料', timeLabel: '昨天', date: '2026-03-03' },
 ];
