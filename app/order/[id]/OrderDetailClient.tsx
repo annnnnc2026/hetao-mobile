@@ -459,7 +459,6 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
               <>
                 {/* 基本資訊 + 派工資訊（合併） */}
                 <Section title="基本資訊">
-                  <InfoField icon={Building2}   label="機號"     value={order.erpNo} />
                   <InfoField icon={CalendarDays} label="派工日期" value={order.date} />
                   <InfoField icon={Tag}          label="派工類型" value={order.serviceType} />
                   <InfoField icon={AlertCircle}  label="優先度"   value={order.priority ?? '一般'} />
