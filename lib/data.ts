@@ -581,12 +581,30 @@ export interface Material {
 }
 
 export const MATERIALS: Material[] = [
-  { materialNo: 'UF-515',  name: '顆粒活性碳濾芯',      unit: '支' },
-  { materialNo: 'F-PP5',   name: 'PP 棉濾芯 5吋',       unit: '支' },
-  { materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)',    unit: '支' },
-  { materialNo: 'F-RO75',  name: 'RO 逆滲透膜 75G',     unit: '片' },
-  { materialNo: 'P-EMV12', name: '進水電磁閥 DC12V',    unit: '組' },
-  { materialNo: 'P-OR-L',  name: 'O 型環 (大)',          unit: '個' },
+  { materialNo: 'UF-515',   name: '顆粒活性碳濾芯',          unit: '支' },
+  { materialNo: 'UF-1',     name: '顆粒活性碳濾芯',          unit: '支' },
+  { materialNo: 'UF-10P5C', name: '無鈉樹脂混合活性碳濾芯', unit: '支' },
+  { materialNo: 'UF-504',   name: '銀添濾芯組合',            unit: '組' },
+  { materialNo: 'UF-557',   name: '濾心',                    unit: '支' },
+  { materialNo: 'UF-583',   name: '5μPP濾芯',               unit: '支' },
+  { materialNo: 'UF-591',   name: '1μPP濾芯',               unit: '支' },
+  { materialNo: 'UF-592',   name: '1UPP濾芯',                unit: '支' },
+  { materialNo: 'UF-593',   name: 'RO過濾器 UN-9505 UF65',  unit: '組' },
+  { materialNo: 'UF-62',    name: '1302電熱管',              unit: '支' },
+  { materialNo: 'UF-63',    name: '5U.P.P.濾芯組合',         unit: '組' },
+  { materialNo: 'U-35',     name: '濾芯組合(熱縮)',          unit: '組' },
+  { materialNo: 'U-549',    name: '無鈉樹脂混合活性碳濾芯', unit: '支' },
+  { materialNo: 'U-2035-2', name: '612.1302PC板',            unit: '片' },
+  { materialNo: 'U-2069-13',name: '全戶式不銹鋼淨水器',     unit: '台' },
+  { materialNo: 'U-2547',   name: '商用除菌淨水器',          unit: '台' },
+  { materialNo: 'U-9200SS', name: '零下冰溫瞬熱旗艦飲水機', unit: '台' },
+  { materialNo: 'E-256-2',  name: '膜管',                    unit: '支' },
+  // 舊測試用料（保留）
+  { materialNo: 'F-PP5',    name: 'PP 棉濾芯 5吋',           unit: '支' },
+  { materialNo: 'F-CTO',    name: '活性碳濾芯 (CTO)',        unit: '支' },
+  { materialNo: 'F-RO75',   name: 'RO 逆滲透膜 75G',         unit: '片' },
+  { materialNo: 'P-EMV12',  name: '進水電磁閥 DC12V',        unit: '組' },
+  { materialNo: 'P-OR-L',   name: 'O 型環 (大)',              unit: '個' },
 ];
 
 export function getMaterial(materialNo: string): Material | undefined {
