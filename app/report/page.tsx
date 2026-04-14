@@ -6,16 +6,6 @@ function formatDate(d: string) {
   return `${y} 年 ${parseInt(m)} 月 ${parseInt(day)} 日`;
 }
 
-function getMachineNos(o: WorkOrder): string[] {
-  if (o.machineBuildings && o.machineBuildings.length > 0) {
-    return o.machineBuildings.flatMap((b) =>
-      b.floors.flatMap((f) =>
-        f.machines ? f.machines.map((m) => m.machineNo) : [f.machineNo]
-      )
-    );
-  }
-  return [o.erpNo];
-}
 
 function getTags(o: WorkOrder): string[] {
   const tags: string[] = [];
@@ -71,19 +61,12 @@ export default function ReportPage() {
                     <AmountDisplay o={o} />
                   </div>
 
-                  {/* 機號 + 數量 */}
-                  <div className="flex items-center gap-2 text-xs text-gray-500 mb-2.5 flex-wrap">
-                    <span>{getMachineNos(o).join('、')}</span>
-                    <span className="text-gray-300">·</span>
-                    <span>數量 {o.deviceCount}</span>
-                  </div>
-
-                  {/* 標籤 */}
+                  {/* 標籤 + 數量 */}
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
-                      {tags.map((tag) => (
+                      {tags.map((tag, idx) => (
                         <span key={tag} className="text-[11px] bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium">
-                          {tag}
+                          {idx === 0 ? `${tag} 數量${o.deviceCount}` : tag}
                         </span>
                       ))}
                     </div>
