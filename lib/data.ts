@@ -573,30 +573,49 @@ export const TRAVEL_INFO: TravelInfo[] = [
   { minutes: 18, km: 12.4 },
 ];
 
+// ─── 料件主檔 ────────────────────────────────────────────────────────────────
+export interface Material {
+  materialNo: string;   // 料號,   e.g. 'UF-515'
+  name: string;         // 濾材名稱, e.g. '顆粒活性碳濾芯'
+  unit: string;         // 單位
+}
+
+export const MATERIALS: Material[] = [
+  { materialNo: 'UF-515',  name: '顆粒活性碳濾芯',      unit: '支' },
+  { materialNo: 'F-PP5',   name: 'PP 棉濾芯 5吋',       unit: '支' },
+  { materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)',    unit: '支' },
+  { materialNo: 'F-RO75',  name: 'RO 逆滲透膜 75G',     unit: '片' },
+  { materialNo: 'P-EMV12', name: '進水電磁閥 DC12V',    unit: '組' },
+  { materialNo: 'P-OR-L',  name: 'O 型環 (大)',          unit: '個' },
+];
+
+export function getMaterial(materialNo: string): Material | undefined {
+  return MATERIALS.find((m) => m.materialNo === materialNo);
+}
+
+// ─── 領退料交易紀錄 ──────────────────────────────────────────────────────────
 export type MaterialType = '領料' | '退料' | '消料';
 
 export interface MaterialTransaction {
   id: string;
-  materialNo: string;  // 料號
-  name: string;        // 品名規格
-  machineNo: string;   // 機號（消料時填寫）
-  unit: string;        // 單位
-  qty: number;         // +正數 = 領料/退料, -負數 = 消料
-  type: MaterialType;  // 領料 | 退料 | 消料
+  materialNo: string;  // 料號（對應 MATERIALS 主檔）
+  machineNo: string;   // 設備機號（消料時填寫）
+  qty: number;         // +正數 = 領料, -負數 = 消料/退料
+  type: MaterialType;
   timeLabel: string;   // 顯示用時間（如 "09:15 AM" / "昨天"）
   date: string;        // YYYY-MM-DD
 }
 
 export const MATERIAL_TRANSACTIONS: MaterialTransaction[] = [
   // 今日
-  { id: 'mt01', materialNo: 'F-PP5',   name: 'PP 棉濾芯 5吋',     machineNo: '',        unit: '支', qty: +5, type: '領料', timeLabel: '08:30 AM', date: TODAY },
-  { id: 'mt02', materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)',  machineNo: '',        unit: '支', qty: +3, type: '領料', timeLabel: '08:30 AM', date: TODAY },
-  { id: 'mt03', materialNo: 'F-PP5',   name: 'PP 棉濾芯 5吋',     machineNo: 'B3-0017', unit: '支', qty: -2, type: '消料', timeLabel: '10:00 AM', date: TODAY },
-  { id: 'mt04', materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)',  machineNo: 'B3-0017', unit: '支', qty: -5, type: '消料', timeLabel: '11:30 AM', date: TODAY },
-  { id: 'mt05', materialNo: 'F-RO75',  name: 'RO 逆滲透膜 75G',  machineNo: 'B3-0017', unit: '片', qty: -1, type: '消料', timeLabel: '12:15 PM', date: TODAY },
+  { id: 'mt01', materialNo: 'F-PP5',   machineNo: '',        qty: +5, type: '領料', timeLabel: '08:30 AM', date: TODAY },
+  { id: 'mt02', materialNo: 'F-CTO',   machineNo: '',        qty: +3, type: '領料', timeLabel: '08:30 AM', date: TODAY },
+  { id: 'mt03', materialNo: 'F-PP5',   machineNo: 'B3-0017', qty: -2, type: '消料', timeLabel: '10:00 AM', date: TODAY },
+  { id: 'mt04', materialNo: 'F-CTO',   machineNo: 'B3-0017', qty: -5, type: '消料', timeLabel: '11:30 AM', date: TODAY },
+  { id: 'mt05', materialNo: 'F-RO75',  machineNo: 'B3-0017', qty: -1, type: '消料', timeLabel: '12:15 PM', date: TODAY },
   // 昨天
-  { id: 'mt06', materialNo: 'P-EMV12', name: '進水電磁閥 DC12V', machineNo: '',        unit: '組', qty: +1, type: '領料', timeLabel: '昨天',      date: '2026-03-03' },
-  { id: 'mt07', materialNo: 'P-OR-L',  name: 'O 型環 (大)',       machineNo: '',        unit: '個', qty: +6, type: '領料', timeLabel: '昨天',      date: '2026-03-03' },
-  { id: 'mt08', materialNo: 'P-OR-L',  name: 'O 型環 (大)',       machineNo: 'H2-0051', unit: '個', qty: -4, type: '消料', timeLabel: '昨天',      date: '2026-03-03' },
-  { id: 'mt09', materialNo: 'P-EMV12', name: '進水電磁閥 DC12V', machineNo: 'H2-0051', unit: '組', qty: -1, type: '退料', timeLabel: '昨天',      date: '2026-03-03' },
+  { id: 'mt06', materialNo: 'P-EMV12', machineNo: '',        qty: +1, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt07', materialNo: 'P-OR-L',  machineNo: '',        qty: +6, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt08', materialNo: 'P-OR-L',  machineNo: 'H2-0051', qty: -4, type: '消料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt09', materialNo: 'P-EMV12', machineNo: 'H2-0051', qty: -1, type: '退料', timeLabel: '昨天', date: '2026-03-03' },
 ];
