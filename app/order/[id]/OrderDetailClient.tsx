@@ -349,8 +349,9 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
             {/* ─── 統計概覽 ─── */}
             {(() => {
-              const totalMachines = allBuildingMachines.length || buildings.flatMap((b) => b.floors).length || 5;
-              const todayDone = confirmedDoneIds.length;
+              const hasMachineBuildings = allBuildingMachines.length > 0;
+              const totalMachines = hasMachineBuildings ? allBuildingMachines.length : order.deviceCount;
+              const todayDone = hasMachineBuildings ? confirmedDoneIds.length : 0;
               const todayPending = Math.max(0, totalMachines - todayDone);
               return (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4">
