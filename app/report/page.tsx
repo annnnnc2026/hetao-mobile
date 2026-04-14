@@ -1,8 +1,5 @@
-'use client';
-
-import { useState } from 'react';
 import BottomNav from '@/components/BottomNav';
-import { ALL_ORDERS, getAvailableDates, TODAY, TECHNICIAN_NAME, WorkOrder } from '@/lib/data';
+import { ALL_ORDERS, TODAY, TECHNICIAN_NAME, WorkOrder } from '@/lib/data';
 
 function formatDate(d: string) {
   const [y, m, day] = d.split('-');
@@ -39,10 +36,7 @@ function AmountDisplay({ o }: { o: WorkOrder }) {
 }
 
 export default function ReportPage() {
-  const dates = getAvailableDates();
-  const [selectedDate, setSelectedDate] = useState(TODAY);
-
-  const orders = ALL_ORDERS.filter((o) => o.date === selectedDate);
+  const orders = ALL_ORDERS.filter((o) => o.date === TODAY);
 
   const cashTotal    = orders.filter((o) => o.paymentMethod === '現金' || o.paymentMethod === '信用卡').reduce((s, o) => s + (o.serviceAmount ?? 0), 0);
   const billTotal    = orders.filter((o) => o.paymentMethod === '匯款').reduce((s, o) => s + (o.serviceAmount ?? 0), 0);
@@ -56,18 +50,8 @@ export default function ReportPage() {
         <div className="mb-5">
           <h1 className="text-2xl font-bold text-gray-900">營業日報表</h1>
           <p className="text-sm text-gray-400 mt-1">{TECHNICIAN_NAME}</p>
+          <p className="text-sm text-gray-400 mt-0.5">{formatDate(TODAY)}</p>
         </div>
-
-        {/* 日期選擇 */}
-        <select
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="w-full text-sm font-medium text-gray-900 border border-gray-200 rounded-xl px-3 py-2.5 bg-white mb-4"
-        >
-          {dates.map((d) => (
-            <option key={d} value={d}>{formatDate(d)}</option>
-          ))}
-        </select>
 
         {/* 工單卡片 */}
         <div className="flex flex-col gap-3 mb-6">
