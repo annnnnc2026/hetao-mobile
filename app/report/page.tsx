@@ -64,11 +64,14 @@ export default function ReportPage() {
                   {/* 標籤 + 數量 */}
                   {tags.length > 0 && (
                     <div className="flex flex-wrap gap-1.5">
-                      {tags.map((tag, idx) => (
-                        <span key={tag} className="text-[11px] bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium">
-                          {idx === 0 ? `${tag} 數量${o.deviceCount}` : tag}
-                        </span>
-                      ))}
+                      {tags.map((tag) => {
+                        const withQty = tag === '維修' || tag === '裝機';
+                        return (
+                          <span key={tag} className="text-[11px] bg-gray-100 text-gray-600 rounded-full px-2.5 py-0.5 font-medium">
+                            {withQty ? `${tag} 數量${o.deviceCount}` : tag}
+                          </span>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
