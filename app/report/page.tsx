@@ -100,20 +100,20 @@ export default function ReportPage() {
         </div>
 
         {/* 當日銷貨金額合計 */}
-        <div className="bg-gray-900 text-white rounded-2xl px-4 py-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4">
           <p className="text-xs text-gray-400 mb-3">當日銷貨金額合計</p>
-          <div className="grid grid-cols-3 divide-x divide-gray-700">
+          <div className="grid grid-cols-3 divide-x divide-gray-100">
             <div className="text-center pr-3">
               <p className="text-xs text-gray-400 mb-1">現金</p>
-              <p className="text-base font-bold">${cashTotal.toLocaleString()}</p>
+              <p className="text-base font-bold text-gray-900">${cashTotal.toLocaleString()}</p>
             </div>
             <div className="text-center px-3">
               <p className="text-xs text-gray-400 mb-1">票據</p>
-              <p className="text-base font-bold">${billTotal.toLocaleString()}</p>
+              <p className="text-base font-bold text-gray-900">${billTotal.toLocaleString()}</p>
             </div>
             <div className="text-center pl-3">
               <p className="text-xs text-gray-400 mb-1">應帳</p>
-              <p className="text-base font-bold">${accountTotal.toLocaleString()}</p>
+              <p className="text-base font-bold text-gray-900">${accountTotal.toLocaleString()}</p>
             </div>
           </div>
         </div>
