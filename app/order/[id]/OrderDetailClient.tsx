@@ -657,28 +657,25 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   <Package className="w-4 h-4 text-gray-400" />
                   <h3 className="text-base font-bold text-gray-900">用料紀錄</h3>
                 </div>
-                <div className="flex flex-col gap-0">
-                  {[...PARTS_HISTORY].sort((a, b) => b.date.localeCompare(a.date)).map((p, i, arr) => (
-                    <div key={i} className="flex items-start gap-3 pb-3 last:pb-0">
-                      <div className="flex flex-col items-center pt-1.5">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${p.status === '已用料' ? 'bg-green-400' : 'bg-amber-400'}`} />
-                        {i < arr.length - 1 && (
-                          <div className="w-px flex-1 bg-gray-100 mt-1.5 min-h-[24px]" />
-                        )}
+                <div className="flex flex-col divide-y divide-gray-50">
+                  {[...PARTS_HISTORY].sort((a, b) => b.date.localeCompare(a.date)).map((p, i) => (
+                    <div key={i} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
+                      {/* 左：日期 */}
+                      <div className="shrink-0 text-center w-14">
+                        <p className="text-[11px] text-gray-400 leading-tight">{p.date.replace(/-/g, '\n')}</p>
                       </div>
-                      <div className="flex-1 min-w-0 pb-3 border-b border-gray-50 last:border-0">
-                        <div className="flex items-center gap-2 mb-0.5">
-                          <span className="text-xs text-gray-400">{p.date}</span>
-                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            p.status === '已用料'
-                              ? 'bg-green-50 text-green-600'
-                              : 'bg-amber-50 text-amber-600'
-                          }`}>{p.status}</span>
-                        </div>
-                        <p className="text-xs text-gray-400">{p.materialNo}</p>
-                        <p className="text-sm text-gray-800">{p.name}</p>
+                      {/* 中：料號 + 名稱 + 數量 */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] text-gray-400">{p.materialNo}</p>
+                        <p className="text-sm font-medium text-gray-800 leading-snug">{p.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">數量：{p.qty} {p.unit}</p>
                       </div>
+                      {/* 右：狀態標籤 */}
+                      <span className={`shrink-0 text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        p.status === '已用料'
+                          ? 'bg-green-50 text-green-600'
+                          : 'bg-amber-50 text-amber-600'
+                      }`}>{p.status}</span>
                     </div>
                   ))}
                 </div>
