@@ -38,7 +38,7 @@ export default function MaterialsPage() {
                       isShort ? 'text-red-500' : isZero ? 'text-gray-400' : 'text-gray-900'
                     }`}
                   >
-                    {m.balance}
+                    {Math.abs(m.balance)}
                   </span>
                   <span className="text-xs text-gray-400">{m.unit}</span>
                   {isShort && (
