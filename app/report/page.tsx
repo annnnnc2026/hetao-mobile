@@ -82,7 +82,7 @@ export default function ReportPage() {
 
                   {/* 品名 + 數量 */}
                   <div className="flex items-center gap-2 text-xs text-gray-500 mb-2.5">
-                    <span>{o.modelNumber}</span>
+                    <span>{o.erpNo}</span>
                     <span className="text-gray-300">·</span>
                     <span>數量 {o.deviceCount}</span>
                   </div>
