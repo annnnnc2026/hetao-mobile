@@ -550,7 +550,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                       <InfoField icon={MapPin}       label="收款地址"        value={order.address} fullWidth />
                       <InfoField icon={Hash}         label="統編"            value="39503759" />
                       <InfoField icon={CalendarDays} label="日期"            value={order.date} />
-                      <InfoField icon={QrCode}       label="機號（保養卡號）" value={order.cardNo} fullWidth />
+                      <InfoField icon={QrCode}       label="設備機號" value={order.erpNo} fullWidth />
                     </div>
                   )}
                 </div>

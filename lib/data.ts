@@ -42,7 +42,6 @@ export interface WorkOrder {
   // customer
   customerName: string;
   customerType: CustomerType;
-  cardNo: string;
   address: string;
   contactName: string;
   phone: string;
@@ -90,7 +89,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '維修',
     customerName: '宏威科技股份有限公司',
     customerType: '商用',
-    cardNo: '31205',
     address: '新竹縣竹北市台元街32號3樓',
     contactName: '陳小姐',
     phone: '03-550-1234',
@@ -170,7 +168,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '保養',
     customerName: '竹北市戶政事務所',
     customerType: '公家機關',
-    cardNo: '24551',
     address: '新竹縣竹北市光明六路10號',
     contactName: '李先生',
     phone: '03-551-8171',
@@ -202,7 +199,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '維修',
     customerName: '新竹國泰綜合醫院',
     customerType: '醫療',
-    cardNo: '18823',
     address: '新竹市東區中華路二段678號',
     contactName: '總務室',
     phone: '03-527-8999',
@@ -234,7 +230,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '裝機',
     customerName: '美研形象美容坊',
     customerType: '商用',
-    cardNo: '45678',
     address: '新竹縣竹北市縣政二路168號',
     contactName: '王老闆',
     phone: '03-558-8899',
@@ -266,7 +261,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '保養',
     customerName: '張志明',
     customerType: '家用',
-    cardNo: '88201',
     address: '新竹縣竹北市文興路一段88號',
     contactName: '張先生',
     phone: '0912-345-678',
@@ -298,7 +292,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '維修',
     customerName: '新竹物流倉儲股份有限公司',
     customerType: '商用',
-    cardNo: '33471',
     address: '新竹縣湖口鄉中山路二段150號',
     contactName: '王組長',
     phone: '03-599-0011',
@@ -330,7 +323,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '保養',
     customerName: '竹北長安診所',
     customerType: '醫療',
-    cardNo: '21098',
     address: '新竹縣竹北市長安街55號',
     contactName: '診所護理師',
     phone: '03-552-7788',
@@ -362,7 +354,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '延卡',
     customerName: '陳美玲',
     customerType: '家用',
-    cardNo: '76512',
     address: '新竹市東區經國路一段228號',
     contactName: '陳小姐',
     phone: '0928-111-222',
@@ -395,7 +386,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '保養',
     customerName: '新竹市政府',
     customerType: '公家機關',
-    cardNo: '10021',
     address: '新竹市中正路120號',
     contactName: '總務科',
     phone: '03-521-6121',
@@ -427,7 +417,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '維修',
     customerName: '工業技術研究院',
     customerType: '公家機關',
-    cardNo: '20033',
     address: '新竹縣竹東鎮中興路四段195號',
     contactName: '設備組',
     phone: '03-591-6000',
@@ -459,7 +448,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '保養',
     customerName: '台積電研發中心',
     customerType: '商用',
-    cardNo: '55201',
     address: '新竹市科學園區力行六路8號',
     contactName: '廠務部',
     phone: '03-563-6688',
@@ -508,7 +496,6 @@ export const ALL_ORDERS: WorkOrder[] = [
     serviceType: '保養',
     customerName: '聯發科技股份有限公司',
     customerType: '商用',
-    cardNo: '67890',
     address: '新竹市科學園區創新一路1號',
     contactName: '設備管理部',
     phone: '03-567-0767',
