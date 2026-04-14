@@ -174,7 +174,6 @@ export default function RecentPage() {
               const duration = order.durationHours === 0.5 ? '0.5h' : `${order.durationHours}h`;
               const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}`;
               const telUrl = `tel:${order.phone}`;
-              const showAmount = order.serviceType === '裝機' && order.serviceAmount;
 
               return (
                 <Link key={order.id} href={`/order/${order.id}`}>
@@ -185,16 +184,9 @@ export default function RecentPage() {
                         <StatusBadge status={order.status} />
                         <PriorityBadge priority={order.priority} />
                       </div>
-                      <div className="flex items-center gap-2">
-                        {showAmount && (
-                          <span className="text-xs font-semibold text-amber-500">
-                            $ {order.serviceAmount!.toLocaleString()}
-                          </span>
-                        )}
-                        <span className="text-sm font-medium text-gray-400 tabular-nums">
-                          {order.timeStart}–{order.timeEnd}
-                        </span>
-                      </div>
+                      <span className="text-sm font-medium text-gray-400 tabular-nums">
+                        {order.timeStart}–{order.timeEnd}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 mb-1">
                       <ServiceTypeBadge type={order.serviceType} />

@@ -15,27 +15,18 @@ export default function OrderCard({ order }: Props) {
   const duration = order.durationHours === 0.5 ? '0.5h' : `${order.durationHours}h`;
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}`;
   const telUrl = `tel:${order.phone}`;
-  const showAmount = order.serviceType === '裝機' && order.serviceAmount;
-
   return (
     <Link href={`/order/${order.id}`}>
       <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:bg-gray-50 transition-colors">
-        {/* Top row: status badges + amount/time */}
+        {/* Top row: status badges + time */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-1.5 flex-wrap">
             <StatusBadge status={order.status} />
             <PriorityBadge priority={order.priority} />
           </div>
-          <div className="flex items-center gap-2">
-            {showAmount && (
-              <span className="text-xs font-semibold text-amber-500">
-                $ {order.serviceAmount!.toLocaleString()}
-              </span>
-            )}
-            <span className="text-sm font-medium text-gray-400 tabular-nums">
-              {order.timeStart}–{order.timeEnd}
-            </span>
-          </div>
+          <span className="text-sm font-medium text-gray-400 tabular-nums">
+            {order.timeStart}–{order.timeEnd}
+          </span>
         </div>
 
         {/* Service type + customer name */}
