@@ -295,9 +295,10 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}`;
   const duration = order.durationHours === 0.5 ? '0.5 小時' : `${order.durationHours} 小時`;
 
-  // Machine-level values: prefer selected floor, fall back to order-level
-  const machineNo = selectedFloor?.machineNo ?? order.erpNo;
-  const modelNumber = selectedFloor?.modelNumber ?? order.modelNumber;
+  // Machine-level values: prefer selected machine → floor → order
+  const selectedMachine = floorMachines.find((m) => m.id === selectedMachineId) ?? floorMachines[0] ?? null;
+  const machineNo = selectedMachine?.machineNo ?? selectedFloor?.machineNo ?? order.erpNo;
+  const modelNumber = selectedMachine?.modelNumber ?? selectedFloor?.modelNumber ?? order.modelNumber;
   const workDescription = selectedFloor?.workDescription ?? order.workDescription;
   const specialNote = selectedFloor?.specialNote ?? order.specialNote;
 
