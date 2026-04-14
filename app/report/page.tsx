@@ -99,6 +99,29 @@ export default function ReportPage() {
           )}
         </div>
 
+        {/* 審核欄位 */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4 mb-4">
+          <p className="text-xs text-gray-400 mb-3">簽核狀態</p>
+          <div className="flex flex-col divide-y divide-gray-50">
+            {[
+              { role: '營站主管', signed: false },
+              { role: '會計',     signed: false },
+              { role: '倉管',     signed: false },
+              { role: '出納',     signed: false },
+              { role: '營業人員', signed: true  },
+            ].map(({ role, signed }) => (
+              <div key={role} className="flex items-center justify-between py-2.5 first:pt-0 last:pb-0">
+                <span className="text-sm text-gray-700">{role}</span>
+                <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${
+                  signed ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-500'
+                }`}>
+                  {signed ? '已簽核' : '待簽核'}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* 當日銷貨金額合計 */}
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-4">
           <p className="text-xs text-gray-400 mb-3">當日銷貨金額合計</p>
