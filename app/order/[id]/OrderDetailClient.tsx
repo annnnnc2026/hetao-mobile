@@ -204,7 +204,7 @@ function MachineSelector({
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm"
       >
-        <span>{current?.machineNo ?? '選擇機器'}</span>
+        <span>{current ? `設備機號：${current.machineNo}` : '選擇機器'}</span>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
