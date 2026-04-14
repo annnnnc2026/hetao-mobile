@@ -81,7 +81,7 @@ export const TODAY = '2026-03-04';
 export const ALL_ORDERS: WorkOrder[] = [
   {
     id: 'WO-20260304-0001',
-    erpNo: '260304001',
+    erpNo: '109750',
     status: '已指派',
     priority: '急件',
     date: '2026-03-04',
@@ -103,19 +103,19 @@ export const ALL_ORDERS: WorkOrder[] = [
         floors: [
           {
             id: 'A-1F', label: '1F 接待大廳', needsService: false,
-            machineNo: '260304001', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
+            machineNo: '109750', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
             machines: [
-              { id: 'A1-M1', machineNo: '260304001', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
-              { id: 'A1-M2', machineNo: '260304002', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '靠牆第二台', needsService: false },
-              { id: 'A1-M3', machineNo: '260304003', modelNumber: 'UR7301CW-2', workDescription: null, specialNote: '接待台右側', needsService: false },
+              { id: 'A1-M1', machineNo: '109750', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
+              { id: 'A1-M2', machineNo: '109751', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '靠牆第二台', needsService: false },
+              { id: 'A1-M3', machineNo: '109752', modelNumber: 'UR7301CW-2', workDescription: null, specialNote: '接待台右側', needsService: false },
             ],
           },
           {
             id: 'A-2F', label: '2F 辦公區', needsService: false,
-            machineNo: '260304004', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
+            machineNo: '109753', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
             machines: [
-              { id: 'A2-M1', machineNo: '260304004', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
-              { id: 'A2-M2', machineNo: '260304005', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '茶水間角落', needsService: false },
+              { id: 'A2-M1', machineNo: '109753', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
+              { id: 'A2-M2', machineNo: '109754', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '茶水間角落', needsService: false },
             ],
           },
         ],
@@ -126,17 +126,17 @@ export const ALL_ORDERS: WorkOrder[] = [
         floors: [
           {
             id: 'B-3F', label: '3F 茶水間右側', needsService: true,
-            machineNo: '260304006', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記',
+            machineNo: '109755', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記',
             machines: [
-              { id: 'B3-M1', machineNo: '260304006', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記', needsService: true },
-              { id: 'B3-M2', machineNo: '260304007', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '茶水間左側備用機', needsService: false },
+              { id: 'B3-M1', machineNo: '109755', modelNumber: 'UR5912BPW-1', workDescription: '飲水機底部持續漏水，已放置水桶接水，影響辦公區域使用', specialNote: '大樓門禁需換證，請至1樓櫃台登記', needsService: true },
+              { id: 'B3-M2', machineNo: '109756', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: '茶水間左側備用機', needsService: false },
             ],
           },
           {
             id: 'B-5F', label: '5F 主管室', needsService: false,
-            machineNo: '260304008', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
+            machineNo: '109757', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null,
             machines: [
-              { id: 'B5-M1', machineNo: '260304008', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
+              { id: 'B5-M1', machineNo: '109757', modelNumber: 'UR5912BPW-1', workDescription: null, specialNote: null, needsService: false },
             ],
           },
         ],
@@ -161,7 +161,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260304-0002',
-    erpNo: '260304002',
+    erpNo: '109751',
     status: '已指派',
     priority: null,
     date: '2026-03-04',
@@ -193,7 +193,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260304-0003',
-    erpNo: '260304003',
+    erpNo: '109752',
     status: '進行中',
     priority: '緊急',
     date: '2026-03-04',
@@ -225,7 +225,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260304-0004',
-    erpNo: '260304004',
+    erpNo: '109753',
     status: '已指派',
     priority: null,
     date: '2026-03-04',
@@ -257,7 +257,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260304-0005',
-    erpNo: '260304005',
+    erpNo: '109754',
     status: '已指派',
     priority: null,
     date: '2026-03-04',
@@ -289,7 +289,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260304-0006',
-    erpNo: '260304006',
+    erpNo: '109755',
     status: '已指派',
     priority: null,
     date: '2026-03-04',
@@ -321,7 +321,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260304-0007',
-    erpNo: '260304007',
+    erpNo: '109756',
     status: '已指派',
     priority: null,
     date: '2026-03-04',
@@ -353,7 +353,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260304-0008',
-    erpNo: '260304008',
+    erpNo: '109757',
     status: '已指派',
     priority: null,
     date: '2026-03-04',
@@ -386,7 +386,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   // Recent orders
   {
     id: 'WO-20260302-0001',
-    erpNo: '260302001',
+    erpNo: '109740',
     status: '已完成',
     priority: null,
     date: '2026-03-02',
@@ -418,7 +418,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260302-0002',
-    erpNo: '260302002',
+    erpNo: '109741',
     status: '已完成',
     priority: null,
     date: '2026-03-02',
@@ -450,7 +450,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260303-0001',
-    erpNo: '260303001',
+    erpNo: '109745',
     status: '已完成',
     priority: null,
     date: '2026-03-03',
@@ -468,15 +468,15 @@ export const ALL_ORDERS: WorkOrder[] = [
         id: 'H',
         name: 'H棟',
         floors: [
-          { id: 'H-2F', label: '2F 工程師休息室', needsService: true, machineNo: 'H2-0051', modelNumber: 'UR9005BW-1', workDescription: '定期濾芯更換保養', specialNote: '需事先申請廠區通行證，請提前30分鐘抵達' },
-          { id: 'H-4F', label: '4F 會議室', needsService: false, machineNo: 'H4-0063', modelNumber: 'UR9005BW-1', workDescription: null, specialNote: null },
+          { id: 'H-2F', label: '2F 工程師休息室', needsService: true, machineNo: '102051', modelNumber: 'UR9005BW-1', workDescription: '定期濾芯更換保養', specialNote: '需事先申請廠區通行證，請提前30分鐘抵達' },
+          { id: 'H-4F', label: '4F 會議室', needsService: false, machineNo: '102063', modelNumber: 'UR9005BW-1', workDescription: null, specialNote: null },
         ],
       },
       {
         id: 'J',
         name: 'J棟',
         floors: [
-          { id: 'J-1F', label: '1F 休息區', needsService: true, machineNo: 'J1-0078', modelNumber: 'UR9005BW-1', workDescription: '定期濾芯更換保養', specialNote: null },
+          { id: 'J-1F', label: '1F 休息區', needsService: true, machineNo: '102078', modelNumber: 'UR9005BW-1', workDescription: '定期濾芯更換保養', specialNote: null },
         ],
       },
     ],
@@ -499,7 +499,7 @@ export const ALL_ORDERS: WorkOrder[] = [
   },
   {
     id: 'WO-20260305-0001',
-    erpNo: '260305001',
+    erpNo: '109760',
     status: '已指派',
     priority: null,
     date: '2026-03-05',
@@ -517,15 +517,15 @@ export const ALL_ORDERS: WorkOrder[] = [
         id: 'M',
         name: 'M棟',
         floors: [
-          { id: 'M-4F', label: '4F 會議室', needsService: true, machineNo: 'M4-0011', modelNumber: 'UR9615AG-2', workDescription: '兩台設備保養', specialNote: null },
-          { id: 'M-4F-VIP', label: '4F 貴賓室', needsService: false, machineNo: 'M4-0012', modelNumber: 'UR9615AG-2', workDescription: null, specialNote: null },
+          { id: 'M-4F', label: '4F 會議室', needsService: true, machineNo: '104011', modelNumber: 'UR9615AG-2', workDescription: '兩台設備保養', specialNote: null },
+          { id: 'M-4F-VIP', label: '4F 貴賓室', needsService: false, machineNo: '104012', modelNumber: 'UR9615AG-2', workDescription: null, specialNote: null },
         ],
       },
       {
         id: 'N',
         name: 'N棟',
         floors: [
-          { id: 'N-6F', label: '6F 研發中心', needsService: false, machineNo: 'N6-0033', modelNumber: 'UR9615AG-2', workDescription: null, specialNote: null },
+          { id: 'N-6F', label: '6F 研發中心', needsService: false, machineNo: '106033', modelNumber: 'UR9615AG-2', workDescription: null, specialNote: null },
         ],
       },
     ],
@@ -628,12 +628,12 @@ export const MATERIAL_TRANSACTIONS: MaterialTransaction[] = [
   // 今日
   { id: 'mt01', materialNo: 'F-PP5',   machineNo: '',        qty: +5, type: '領料', timeLabel: '08:30 AM', date: TODAY },
   { id: 'mt02', materialNo: 'F-CTO',   machineNo: '',        qty: +3, type: '領料', timeLabel: '08:30 AM', date: TODAY },
-  { id: 'mt03', materialNo: 'F-PP5',   machineNo: 'B3-0017', qty: -2, type: '消料', timeLabel: '10:00 AM', date: TODAY },
-  { id: 'mt04', materialNo: 'F-CTO',   machineNo: 'B3-0017', qty: -5, type: '消料', timeLabel: '11:30 AM', date: TODAY },
-  { id: 'mt05', materialNo: 'F-RO75',  machineNo: 'B3-0017', qty: -1, type: '消料', timeLabel: '12:15 PM', date: TODAY },
+  { id: 'mt03', materialNo: 'F-PP5',   machineNo: '109755', qty: -2, type: '消料', timeLabel: '10:00 AM', date: TODAY },
+  { id: 'mt04', materialNo: 'F-CTO',   machineNo: '109755', qty: -5, type: '消料', timeLabel: '11:30 AM', date: TODAY },
+  { id: 'mt05', materialNo: 'F-RO75',  machineNo: '109755', qty: -1, type: '消料', timeLabel: '12:15 PM', date: TODAY },
   // 昨天
   { id: 'mt06', materialNo: 'P-EMV12', machineNo: '',        qty: +1, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
   { id: 'mt07', materialNo: 'P-OR-L',  machineNo: '',        qty: +6, type: '領料', timeLabel: '昨天', date: '2026-03-03' },
-  { id: 'mt08', materialNo: 'P-OR-L',  machineNo: 'H2-0051', qty: -4, type: '消料', timeLabel: '昨天', date: '2026-03-03' },
-  { id: 'mt09', materialNo: 'P-EMV12', machineNo: 'H2-0051', qty: -1, type: '退料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt08', materialNo: 'P-OR-L',  machineNo: '102051', qty: -4, type: '消料', timeLabel: '昨天', date: '2026-03-03' },
+  { id: 'mt09', materialNo: 'P-EMV12', machineNo: '102051', qty: -1, type: '退料', timeLabel: '昨天', date: '2026-03-03' },
 ];
