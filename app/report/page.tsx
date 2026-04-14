@@ -5,26 +5,25 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 import { ALL_ORDERS, getAvailableDates, TODAY, TECHNICIAN_NAME, WorkOrder } from '@/lib/data';
 
+const DAY_LABELS = ['日', '一', '二', '三', '四', '五', '六'];
+
+function formatMonthYear(d: string) {
+  const [y, m] = d.split('-');
+  return `${y} 年 ${parseInt(m)} 月`;
+}
+
 function formatDate(d: string) {
   const [y, m, day] = d.split('-');
   return `${y} 年 ${parseInt(m)} 月 ${parseInt(day)} 日`;
 }
 
-function formatShort(d: string) {
-  const [, m, day] = d.split('-');
-  return `${parseInt(m)}/${parseInt(day)}`;
-}
-
-// 取得該日期所在週的週一（YYYY-MM-DD）
 function getWeekStart(date: string): string {
   const d = new Date(date);
-  const day = d.getDay(); // 0=日, 1=一 ... 6=六
-  const diff = (day === 0 ? -6 : 1 - day); // 調整到週一
-  d.setDate(d.getDate() + diff);
+  const dow = d.getDay();
+  d.setDate(d.getDate() - dow); // 從週日開始
   return d.toISOString().slice(0, 10);
 }
 
-// 取得從 weekStart 開始的 7 天
 function getWeekDates(weekStart: string): string[] {
   const result: string[] = [];
   const d = new Date(weekStart);
@@ -101,50 +100,47 @@ function OrderCard({ o, idx }: { o: WorkOrder; idx: number }) {
 
 export default function ReportPage() {
   const [mode, setMode] = useState<'day' | 'week'>('day');
-  const [selectedDate, setSelectedDate] = useState(TODAY);
-  const [weekStart, setWeekStart] = useState(() => getWeekStart(TODAY));
-
-  const dates = getAvailableDates();
 
   // 日模式
+  const [selectedDate, setSelectedDate] = useState(TODAY);
+  const dates = getAvailableDates();
   const dayOrders = ALL_ORDERS.filter((o) => o.date === selectedDate);
   const dayTotal = dayOrders.reduce((s, o) => s + (o.serviceAmount ?? 0), 0);
 
   // 週模式
+  const [weekStart, setWeekStart] = useState(() => getWeekStart(TODAY));
+  const [activeDay, setActiveDay] = useState(TODAY);
   const weekDates = getWeekDates(weekStart);
-  const weekEnd = weekDates[6];
-  const weekOrdersByDay = weekDates.map((d) => ({
-    date: d,
-    orders: ALL_ORDERS.filter((o) => o.date === d),
-  })).filter((g) => g.orders.length > 0);
-  const weekTotal = weekOrdersByDay.reduce((s, g) => s + g.orders.reduce((ss, o) => ss + (o.serviceAmount ?? 0), 0), 0);
+  const weekOrders = ALL_ORDERS.filter((o) => weekDates.includes(o.date));
+  const weekTotal = weekOrders.reduce((s, o) => s + (o.serviceAmount ?? 0), 0);
+  const activeDayOrders = ALL_ORDERS.filter((o) => o.date === activeDay);
+  const activeDayTotal = activeDayOrders.reduce((s, o) => s + (o.serviceAmount ?? 0), 0);
+  const datesWithOrders = new Set(weekOrders.map((o) => o.date));
 
   return (
     <>
-      <div className="max-w-md mx-auto px-4 pt-6 pb-28">
-
-        {/* 標題 */}
-        <div className="mb-4">
-          <h1 className="text-base font-bold text-gray-900">營業日報表</h1>
-          <p className="text-xs text-gray-400 mt-0.5">業務員：{TECHNICIAN_NAME}</p>
-        </div>
+      <div className="max-w-md mx-auto pb-28">
 
         {/* 日/週 切換 */}
-        <div className="flex bg-gray-100 rounded-xl p-1 mb-4">
-          {(['day', 'week'] as const).map((m) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
-            >
-              {m === 'day' ? '日' : '週'}
-            </button>
-          ))}
+        <div className="px-4 pt-6 mb-4">
+          <div className="flex bg-gray-100 rounded-xl p-1">
+            {(['day', 'week'] as const).map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`flex-1 py-1.5 rounded-lg text-sm font-medium transition-colors ${mode === m ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+              >
+                {m === 'day' ? '日' : '週'}
+              </button>
+            ))}
+          </div>
         </div>
 
         {mode === 'day' ? (
-          <>
-            {/* 日期選擇 */}
+          <div className="px-4">
+            <div className="mb-2">
+              <p className="text-xs text-gray-400">業務員：{TECHNICIAN_NAME}</p>
+            </div>
             <select
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
@@ -154,63 +150,85 @@ export default function ReportPage() {
                 <option key={d} value={d}>{formatDate(d)}</option>
               ))}
             </select>
-
-            {/* 卡片清單 */}
             <div className="flex flex-col gap-3 mb-4">
               {dayOrders.length === 0
                 ? <p className="text-center text-gray-400 text-sm py-10">當日無工單紀錄</p>
                 : dayOrders.map((o, i) => <OrderCard key={o.id} o={o} idx={i} />)
               }
             </div>
-
-            {/* 當日合計 */}
             <div className="flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3">
               <span className="text-sm font-medium">當日銷貨金額合計</span>
               <span className="text-base font-bold">$ {dayTotal.toLocaleString()}</span>
             </div>
-          </>
+          </div>
         ) : (
           <>
-            {/* 週導覽 */}
-            <div className="flex items-center justify-between mb-4 bg-white border border-gray-200 rounded-xl px-3 py-2">
-              <button onClick={() => setWeekStart(addDays(weekStart, -7))} className="p-1 text-gray-500">
-                <ChevronLeft className="w-5 h-5" />
-              </button>
-              <span className="text-sm font-medium text-gray-900">
-                {formatShort(weekStart)} － {formatShort(weekEnd)}
-              </span>
-              <button onClick={() => setWeekStart(addDays(weekStart, 7))} className="p-1 text-gray-500">
-                <ChevronRight className="w-5 h-5" />
-              </button>
-            </div>
+            {/* 週曆標頭（深色） */}
+            <div className="bg-gray-900 text-white px-4 pt-4 pb-5 mb-4">
+              <div className="flex items-center justify-between mb-1">
+                <button onClick={() => { setWeekStart(addDays(weekStart, -7)); }} className="p-1 text-gray-400">
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="text-center">
+                  <p className="text-base font-bold">{formatMonthYear(weekDates[3])}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{weekOrders.length} 筆工單</p>
+                </div>
+                <button onClick={() => { setWeekStart(addDays(weekStart, 7)); }} className="p-1 text-gray-400">
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
 
-            {/* 各日分組 */}
-            {weekOrdersByDay.length === 0 ? (
-              <p className="text-center text-gray-400 text-sm py-10">本週無工單紀錄</p>
-            ) : (
-              <div className="flex flex-col gap-5 mb-4">
-                {weekOrdersByDay.map((g) => {
-                  const dayAmt = g.orders.reduce((s, o) => s + (o.serviceAmount ?? 0), 0);
+              {/* 星期標題 */}
+              <div className="grid grid-cols-7 mt-3 mb-2">
+                {DAY_LABELS.map((l) => (
+                  <div key={l} className="text-center text-xs text-gray-400 font-medium">{l}</div>
+                ))}
+              </div>
+
+              {/* 日期 */}
+              <div className="grid grid-cols-7">
+                {weekDates.map((d) => {
+                  const dayNum = parseInt(d.split('-')[2]);
+                  const isActive = d === activeDay;
+                  const hasOrders = datesWithOrders.has(d);
                   return (
-                    <div key={g.date}>
-                      {/* 日期標題 */}
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-gray-500">{formatDate(g.date)}</span>
-                        <span className="text-xs text-gray-400">$ {dayAmt.toLocaleString()}</span>
-                      </div>
-                      <div className="flex flex-col gap-3">
-                        {g.orders.map((o, i) => <OrderCard key={o.id} o={o} idx={i} />)}
-                      </div>
-                    </div>
+                    <button
+                      key={d}
+                      onClick={() => setActiveDay(d)}
+                      className="flex flex-col items-center gap-1 py-1"
+                    >
+                      <span className={`w-9 h-9 flex items-center justify-center rounded-full text-sm font-semibold transition-colors ${
+                        isActive ? 'bg-white text-gray-900' : 'text-white'
+                      }`}>
+                        {dayNum}
+                      </span>
+                      <span className={`w-1 h-1 rounded-full ${hasOrders ? 'bg-gray-400' : 'bg-transparent'}`} />
+                    </button>
                   );
                 })}
               </div>
-            )}
+            </div>
 
-            {/* 週合計 */}
-            <div className="flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3">
-              <span className="text-sm font-medium">本週銷貨金額合計</span>
-              <span className="text-base font-bold">$ {weekTotal.toLocaleString()}</span>
+            {/* 選定日的工單 */}
+            <div className="px-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-semibold text-gray-700">{formatDate(activeDay)}</span>
+                {activeDayOrders.length > 0 && (
+                  <span className="text-xs text-gray-400">$ {activeDayTotal.toLocaleString()}</span>
+                )}
+              </div>
+              <div className="flex flex-col gap-3 mb-4">
+                {activeDayOrders.length === 0
+                  ? <p className="text-center text-gray-400 text-sm py-8">當日無工單紀錄</p>
+                  : activeDayOrders.map((o, i) => <OrderCard key={o.id} o={o} idx={i} />)
+                }
+              </div>
+
+              {/* 週合計 */}
+              <div className="flex items-center justify-between bg-gray-900 text-white rounded-2xl px-4 py-3">
+                <span className="text-sm font-medium">本週銷貨金額合計</span>
+                <span className="text-base font-bold">$ {weekTotal.toLocaleString()}</span>
+              </div>
             </div>
           </>
         )}
