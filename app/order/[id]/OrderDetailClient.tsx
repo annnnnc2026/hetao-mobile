@@ -39,14 +39,14 @@ const STATUS_STYLE: Record<HistoryStatus, { dot: string; text: string; label: st
 type PartsStatus = '已用料' | '待用料';
 
 const PARTS_HISTORY: {
-  date: string; name: string; qty: number; unit: string; status: PartsStatus;
+  date: string; materialNo: string; name: string; qty: number; unit: string; status: PartsStatus;
 }[] = [
-  { date: '2026-03-04', name: '活性碳濾芯 (CTO)',  qty: 1, unit: '支', status: '待用料' },
-  { date: '2026-01-15', name: '出水閥',             qty: 1, unit: '個', status: '已用料' },
-  { date: '2026-01-15', name: '止水墊片',           qty: 2, unit: '片', status: '已用料' },
-  { date: '2025-11-20', name: 'PP 纖維濾芯 5u',    qty: 1, unit: '支', status: '已用料' },
-  { date: '2025-08-10', name: 'RO 逆滲透膜 75G',   qty: 1, unit: '支', status: '已用料' },
-  { date: '2025-02-18', name: 'UF 中空絲濾芯',     qty: 1, unit: '支', status: '已用料' },
+  { date: '2026-03-04', materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)', qty: 1, unit: '支', status: '待用料' },
+  { date: '2026-01-15', materialNo: 'P-OV',    name: '出水閥',           qty: 1, unit: '個', status: '已用料' },
+  { date: '2026-01-15', materialNo: 'P-WS',    name: '止水墊片',         qty: 2, unit: '片', status: '已用料' },
+  { date: '2025-11-20', materialNo: 'F-PP5',   name: 'PP 纖維濾芯 5u',  qty: 1, unit: '支', status: '已用料' },
+  { date: '2025-08-10', materialNo: 'F-RO75',  name: 'RO 逆滲透膜 75G', qty: 1, unit: '支', status: '已用料' },
+  { date: '2025-02-18', materialNo: 'UF-591',  name: 'UF 中空絲濾芯',   qty: 1, unit: '支', status: '已用料' },
 ];
 
 // ─── Info field ───────────────────────────────────────────────────────────────
@@ -675,6 +675,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                               : 'bg-amber-50 text-amber-600'
                           }`}>{p.status}</span>
                         </div>
+                        <p className="text-xs text-gray-400">{p.materialNo}</p>
                         <p className="text-sm text-gray-800">{p.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">數量：{p.qty} {p.unit}</p>
                       </div>
