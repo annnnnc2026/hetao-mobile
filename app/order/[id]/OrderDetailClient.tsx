@@ -224,11 +224,11 @@ function MachineSelector({
                 >
                   <div className="min-w-0">
                     <p className={`text-sm font-semibold ${isActive ? 'text-blue-600' : 'text-gray-900'}`}>
-                      {m.machineNo}
+                      設備機號：{m.machineNo}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {m.modelNumber}{m.specialNote ? ` · ${m.specialNote}` : ''}
-                    </p>
+                    {m.specialNote && (
+                      <p className="text-xs text-gray-400 truncate">{m.specialNote}</p>
+                    )}
                   </div>
                   {m.needsService && (
                     <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full ml-2">待處理</span>
@@ -852,10 +852,10 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                           {checked && <Check className="w-3 h-3 text-white" />}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900">{m.machineNo}</p>
-                          <p className="text-xs text-gray-400 truncate">
-                            {m.modelNumber}{m.specialNote ? ` · ${m.specialNote}` : ''}
-                          </p>
+                          <p className="text-sm font-semibold text-gray-900">設備機號：{m.machineNo}</p>
+                          {m.specialNote && (
+                            <p className="text-xs text-gray-400 truncate">{m.specialNote}</p>
+                          )}
                         </div>
                         {m.needsService && (
                           <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">待處理</span>
