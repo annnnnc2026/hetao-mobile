@@ -282,10 +282,18 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
   // Delivery tab
   const [deliveryPayment, setDeliveryPayment] = useState('現金');
-  const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);      // 基本資料預設收起
-  const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false); // 付款方式展開
+  const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);
+  const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false);
+  const [collected, setCollected] = useState(false);
+  const [collectedDate, setCollectedDate] = useState('2026 年 03 月 15 日');
+  const [issueInvoice, setIssueInvoice] = useState(false);
   const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
-  const [prepaidDate, setPrepaidDate] = useState('2026 年 03 月 15 日');
+  // Extra items (加購)
+  const [extraItems, setExtraItems] = useState<{ name: string; qty: number; price: number }[]>([]);
+  const [addingItem, setAddingItem] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemQty, setNewItemQty] = useState('1');
+  const [newItemPrice, setNewItemPrice] = useState('');
 
   // All machines across all buildings (for stats + complete sheet)
   const allBuildingMachines = buildings.flatMap((b) =>
@@ -614,22 +622,118 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                     </div>
                   )}
 
-                  {/* 已預收 */}
-                  <div className="border-t border-gray-50 pt-3">
-                    <p className="text-xs text-gray-400 mb-2">已預收</p>
-                    <div className="bg-blue-50 rounded-xl px-4 py-3">
-                      <p className="text-xs text-blue-400 mb-1">已預收日期</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-base font-semibold text-blue-600">{prepaidDate}</p>
+                  {/* 收款狀態 */}
+                  <div className="border-t border-gray-50 pt-3 flex flex-col gap-3">
+                    {/* 已收款 / 未收款 toggle */}
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-700">收款狀態</p>
+                      <div className="flex rounded-xl overflow-hidden border border-gray-200 text-xs font-semibold">
                         <button
-                          onClick={() => setPrepaidDate(today)}
-                          className="text-xs font-semibold text-blue-500 bg-white px-2.5 py-1 rounded-lg border border-blue-100"
-                        >
-                          本日
-                        </button>
+                          onClick={() => setCollected(true)}
+                          className={`px-3.5 py-1.5 transition-colors ${collected ? 'bg-green-500 text-white' : 'bg-white text-gray-500'}`}
+                        >已收款</button>
+                        <button
+                          onClick={() => setCollected(false)}
+                          className={`px-3.5 py-1.5 transition-colors ${!collected ? 'bg-amber-400 text-white' : 'bg-white text-gray-500'}`}
+                        >未收款</button>
                       </div>
                     </div>
+
+                    {/* 收款日期（已收款時顯示） */}
+                    {collected && (
+                      <div className="bg-green-50 rounded-xl px-4 py-3">
+                        <p className="text-xs text-green-400 mb-1">收款日期</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-base font-semibold text-green-600">{collectedDate}</p>
+                          <button
+                            onClick={() => setCollectedDate(today)}
+                            className="text-xs font-semibold text-green-600 bg-white px-2.5 py-1 rounded-lg border border-green-100"
+                          >本日</button>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* 開立發票 */}
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-medium text-gray-700">開立發票</p>
+                      <button
+                        onClick={() => setIssueInvoice((v) => !v)}
+                        className={`w-12 h-6 rounded-full transition-colors relative ${issueInvoice ? 'bg-blue-500' : 'bg-gray-200'}`}
+                      >
+                        <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${issueInvoice ? 'left-6' : 'left-0.5'}`} />
+                      </button>
+                    </div>
                   </div>
+                </div>
+
+                {/* 新增收費項目 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold text-gray-900">加購項目</h3>
+                    <button
+                      onClick={() => setAddingItem(true)}
+                      className="text-xs font-semibold text-blue-500 bg-blue-50 px-3 py-1.5 rounded-xl"
+                    >＋ 新增</button>
+                  </div>
+
+                  {extraItems.length === 0 && !addingItem && (
+                    <p className="text-sm text-gray-300 text-center py-3">尚無加購項目</p>
+                  )}
+
+                  {extraItems.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">{item.name}</p>
+                        <p className="text-xs text-gray-400">數量 {item.qty}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-gray-900">${(item.qty * item.price).toLocaleString()}</span>
+                        <button onClick={() => setExtraItems((v) => v.filter((_, j) => j !== i))} className="text-gray-300 text-lg leading-none">×</button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {addingItem && (
+                    <div className="mt-2 flex flex-col gap-2">
+                      <input
+                        placeholder="品名"
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          placeholder="數量"
+                          type="number"
+                          value={newItemQty}
+                          onChange={(e) => setNewItemQty(e.target.value)}
+                          className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                        />
+                        <input
+                          placeholder="單價"
+                          type="number"
+                          value={newItemPrice}
+                          onChange={(e) => setNewItemPrice(e.target.value)}
+                          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setAddingItem(false); setNewItemName(''); setNewItemQty('1'); setNewItemPrice(''); }}
+                          className="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-500"
+                        >取消</button>
+                        <button
+                          onClick={() => {
+                            if (newItemName && newItemPrice) {
+                              setExtraItems((v) => [...v, { name: newItemName, qty: Number(newItemQty) || 1, price: Number(newItemPrice) }]);
+                              setAddingItem(false); setNewItemName(''); setNewItemQty('1'); setNewItemPrice('');
+                            }
+                          }}
+                          className="flex-1 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold"
+                        >確認</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 4. 備註 */}
