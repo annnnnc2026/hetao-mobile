@@ -283,19 +283,25 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   // Delivery tab
   const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);
   const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
-  // Payment checkboxes (multi-select)
-  const [payCash, setPayCash] = useState(false);
-  const [payCard, setPayCard] = useState(false);
-  const [payLinePay, setPayLinePay] = useState(false);
-  const [payCheque, setPayCheque] = useState(false);
+  // Payment pill (single select)
+  const [deliveryPayment, setDeliveryPayment] = useState<'現金' | '刷卡' | 'LINE Pay' | '支票'>('現金');
   const [chequeNo, setChequeNo] = useState('');
   const [chequeExpiry, setChequeExpiry] = useState({ y: '', m: '', d: '' });
+  // 未收
   const [payUnpaid, setPayUnpaid] = useState(false);
   const [unpaidDate, setUnpaidDate] = useState({ y: '', m: '', d: '' });
-  const [unpaidMethod, setUnpaidMethod] = useState<'到收' | '電匯' | '郵遞' | ''>('');
+  // 合約，已預收
   const [payContract, setPayContract] = useState(false);
+  const [contractDate, setContractDate] = useState({ y: '', m: '', d: '' });
+  // 開立發票
   const [issueInvoice, setIssueInvoice] = useState(false);
   const [invoiceNo, setInvoiceNo] = useState('');
+  // Extra items (加購)
+  const [extraItems, setExtraItems] = useState<{ name: string; qty: number; price: number }[]>([]);
+  const [addingItem, setAddingItem] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemQty, setNewItemQty] = useState('1');
+  const [newItemPrice, setNewItemPrice] = useState('');
   // Extra items (加購)
   const [extraItems, setExtraItems] = useState<{ name: string; qty: number; price: number }[]>([]);
   const [addingItem, setAddingItem] = useState(false);
@@ -599,89 +605,83 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
                 {/* 3. 付款方式 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
-                  <h3 className="text-base font-bold text-gray-900 mb-4">付款方式</h3>
+                  <h3 className="text-base font-bold text-gray-900 mb-3">付款方式</h3>
 
-                  <div className="flex flex-col gap-3">
-                    {/* 現金 */}
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={payCash} onChange={(e) => setPayCash(e.target.checked)} className="w-4 h-4 accent-gray-800" />
-                      <span className="text-sm text-gray-800">現金</span>
-                    </label>
+                  {/* Pill 單選 */}
+                  <div className="flex gap-2 flex-wrap mb-4">
+                    {(['現金', '刷卡', 'LINE Pay', '支票'] as const).map((m) => (
+                      <button
+                        key={m}
+                        onClick={() => setDeliveryPayment(m)}
+                        className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                          deliveryPayment === m
+                            ? 'bg-gray-900 text-white border-gray-900'
+                            : 'bg-white text-gray-600 border-gray-200'
+                        }`}
+                      >{m}</button>
+                    ))}
+                  </div>
 
-                    {/* 刷卡 + LINE Pay */}
-                    <div className="flex items-center gap-5">
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" checked={payCard} onChange={(e) => setPayCard(e.target.checked)} className="w-4 h-4 accent-gray-800" />
-                        <span className="text-sm text-gray-800">刷卡</span>
-                      </label>
-                      <label className="flex items-center gap-3 cursor-pointer">
-                        <input type="checkbox" checked={payLinePay} onChange={(e) => setPayLinePay(e.target.checked)} className="w-4 h-4 accent-gray-800" />
-                        <span className="text-sm text-gray-800">LINE Pay</span>
-                      </label>
+                  {/* 支票詳細 */}
+                  {deliveryPayment === '支票' && (
+                    <div className="flex flex-col gap-2 mb-4 bg-gray-50 rounded-xl px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 shrink-0">號碼</span>
+                        <input value={chequeNo} onChange={(e) => setChequeNo(e.target.value)} placeholder="填寫支票號碼" className="flex-1 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none px-1 py-0.5" />
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span className="shrink-0">到期</span>
+                        <input value={chequeExpiry.y} onChange={(e) => setChequeExpiry((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none text-center" />
+                        <span>年</span>
+                        <input value={chequeExpiry.m} onChange={(e) => setChequeExpiry((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none text-center" />
+                        <span>月</span>
+                        <input value={chequeExpiry.d} onChange={(e) => setChequeExpiry((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none text-center" />
+                        <span>日</span>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col gap-3 border-t border-gray-50 pt-3">
+                    {/* 未收 */}
+                    <div>
+                      <button
+                        onClick={() => setPayUnpaid((v) => !v)}
+                        className={`text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${payUnpaid ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-600 border-gray-200'}`}
+                      >未收</button>
+                      {payUnpaid && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-400 pl-1">
+                          <span className="shrink-0">預計收款</span>
+                          <input value={unpaidDate.y} onChange={(e) => setUnpaidDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
+                          <span>年</span>
+                          <input value={unpaidDate.m} onChange={(e) => setUnpaidDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
+                          <span>月</span>
+                          <input value={unpaidDate.d} onChange={(e) => setUnpaidDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
+                          <span>日</span>
+                        </div>
+                      )}
                     </div>
 
-                    {/* 支票 */}
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={payCheque} onChange={(e) => setPayCheque(e.target.checked)} className="w-4 h-4 accent-gray-800" />
-                      <span className="text-sm text-gray-800">支票</span>
-                    </label>
-                    {payCheque && (
-                      <div className="ml-7 flex flex-col gap-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400 shrink-0">號碼</span>
-                          <input value={chequeNo} onChange={(e) => setChequeNo(e.target.value)} placeholder="_______________" className="flex-1 border-b border-gray-200 text-sm text-gray-800 outline-none px-1 py-0.5" />
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                          <span>到期</span>
-                          <input value={chequeExpiry.y} onChange={(e) => setChequeExpiry((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-12 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>年</span>
-                          <input value={chequeExpiry.m} onChange={(e) => setChequeExpiry((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-8 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>月</span>
-                          <input value={chequeExpiry.d} onChange={(e) => setChequeExpiry((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-8 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>日</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* 未收 */}
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={payUnpaid} onChange={(e) => setPayUnpaid(e.target.checked)} className="w-4 h-4 accent-gray-800" />
-                      <span className="text-sm text-gray-800">未收</span>
-                    </label>
-                    {payUnpaid && (
-                      <div className="ml-7 flex flex-col gap-2">
-                        <div className="flex items-center gap-1.5 text-xs text-gray-400">
-                          <span>預計收款</span>
-                          <input value={unpaidDate.y} onChange={(e) => setUnpaidDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-12 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>年</span>
-                          <input value={unpaidDate.m} onChange={(e) => setUnpaidDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-8 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>月</span>
-                          <input value={unpaidDate.d} onChange={(e) => setUnpaidDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-8 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>日</span>
-                        </div>
-                        <div className="flex gap-3">
-                          {(['到收', '電匯', '郵遞'] as const).map((m) => (
-                            <label key={m} className="flex items-center gap-1.5 cursor-pointer">
-                              <input type="radio" name="unpaidMethod" checked={unpaidMethod === m} onChange={() => setUnpaidMethod(m)} className="w-3.5 h-3.5 accent-gray-800" />
-                              <span className="text-sm text-gray-700">{m}</span>
-                            </label>
-                          ))}
-                        </div>
-                        <div className="bg-gray-50 rounded-xl px-3 py-2.5">
-                          <p className="text-xs text-gray-400">臺南銀行－北高雄分行　總號：008</p>
-                          <p className="text-xs text-gray-500 font-medium mt-0.5">帳號：710100029191</p>
-                        </div>
-                      </div>
-                    )}
-
                     {/* 合約，已預收 */}
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input type="checkbox" checked={payContract} onChange={(e) => setPayContract(e.target.checked)} className="w-4 h-4 accent-gray-800" />
-                      <span className="text-sm text-gray-800">合約，已預收</span>
-                    </label>
+                    <div>
+                      <button
+                        onClick={() => setPayContract((v) => !v)}
+                        className={`text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${payContract ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-600 border-gray-200'}`}
+                      >合約，已預收</button>
+                      {payContract && (
+                        <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-400 pl-1">
+                          <span className="shrink-0">已預收日期</span>
+                          <input value={contractDate.y} onChange={(e) => setContractDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
+                          <span>年</span>
+                          <input value={contractDate.m} onChange={(e) => setContractDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
+                          <span>月</span>
+                          <input value={contractDate.d} onChange={(e) => setContractDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
+                          <span>日</span>
+                        </div>
+                      )}
+                    </div>
 
                     {/* 開立發票 */}
-                    <div className="border-t border-gray-50 pt-3 flex flex-col gap-2">
+                    <div className="flex flex-col gap-2 border-t border-gray-50 pt-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-700">開立發票</span>
                         <button
