@@ -274,11 +274,10 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const [transferReason, setTransferReason] = useState('');
   const [transferNote, setTransferNote] = useState('');
 
-  // Complete form — machine checkboxes
-  // Pre-confirmed done machines (mock: A棟 1F 全3台已完工，today done=3)
-  const [confirmedDoneIds, setConfirmedDoneIds] = useState<string[]>(['A1-M1', 'A1-M2', 'A1-M3']);
-  // Sheet-internal selection (initialised when sheet opens)
-  const [completeMachineIds, setCompleteMachineIds] = useState<string[]>([]);
+  // Complete sheet — per-machine status
+  type MachineStatus = '已完成' | '待處理' | '未完成';
+  const [machineStatuses, setMachineStatuses] = useState<Record<string, MachineStatus>>({});
+  const [machineReasons, setMachineReasons] = useState<Record<string, string>>({});
 
   // Delivery tab
   const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);
@@ -362,7 +361,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             {(() => {
               const hasMachineBuildings = allBuildingMachines.length > 0;
               const totalMachines = hasMachineBuildings ? allBuildingMachines.length : order.deviceCount;
-              const todayDone = hasMachineBuildings ? confirmedDoneIds.length : 0;
+              const todayDone = hasMachineBuildings ? Object.values(machineStatuses).filter((s) => s === '已完成').length : 0;
               const todayPending = Math.max(0, totalMachines - todayDone);
               return (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4">
@@ -845,7 +844,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             轉派
           </button>
           <button
-            onClick={() => { setCompleteMachineIds(allBuildingMachines.map((x) => x.machine.id)); setSheet('complete'); }}
+            onClick={() => { setMachineStatuses(Object.fromEntries(allBuildingMachines.map((x) => [x.machine.id, '已完成' as const]))); setSheet('complete'); }}
             className="flex-[2] py-3.5 rounded-2xl bg-green-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5"
           >
             <CheckCircle2 className="w-4 h-4" />
@@ -871,7 +870,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-blue-700 font-medium">{order.address}</p>
               </div>
               <button
-                onClick={() => { setCompleteMachineIds(allBuildingMachines.map((x) => x.machine.id)); setSheet('complete'); }}
+                onClick={() => { setMachineStatuses(Object.fromEntries(allBuildingMachines.map((x) => [x.machine.id, '已完成' as const]))); setSheet('complete'); }}
                 className="w-full py-3.5 rounded-xl text-sm font-semibold bg-green-500 text-white flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
@@ -935,9 +934,6 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
       {/* ─── Complete sheet ───────────────────────────────────────────── */}
       <BottomSheet open={sheet === 'complete'} title="完成工單" onClose={() => setSheet('none')}>
-        <p className="text-xs text-gray-400 mb-4">請勾選本次已完成保養的機器</p>
-
-        {/* Group by building → floor */}
         {buildings.map((b) => (
           <div key={b.id} className="mb-4">
             {b.floors.filter((f) => (f.machines ?? []).length > 0).map((f) => (
@@ -945,36 +941,44 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 <p className="text-xs font-semibold text-gray-400 mb-2 px-1">
                   {b.name} · {f.label}
                 </p>
-                <div className="rounded-xl overflow-hidden border border-gray-100">
-                  {(f.machines ?? []).map((m, idx, arr) => {
-                    const checked = completeMachineIds.includes(m.id);
+                <div className="flex flex-col gap-2">
+                  {(f.machines ?? []).map((m) => {
+                    const status = machineStatuses[m.id] ?? '已完成';
+                    const reason = machineReasons[m.id] ?? '';
+                    const setStatus = (s: '已完成' | '待處理' | '未完成') =>
+                      setMachineStatuses((prev) => ({ ...prev, [m.id]: s }));
                     return (
-                      <button
-                        key={m.id}
-                        onClick={() =>
-                          setCompleteMachineIds((prev) =>
-                            checked ? prev.filter((x) => x !== m.id) : [...prev, m.id]
-                          )
-                        }
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                          idx < arr.length - 1 ? 'border-b border-gray-50' : ''
-                        } ${checked ? 'bg-green-50' : 'bg-white'}`}
-                      >
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          checked ? 'bg-green-500 border-green-500' : 'border-gray-300'
-                        }`}>
-                          {checked && <Check className="w-3 h-3 text-white" />}
+                      <div key={m.id} className="bg-gray-50 rounded-xl px-4 py-3">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900">設備機號：{m.machineNo}</p>
+                            {m.specialNote && <p className="text-xs text-gray-400 truncate">{m.specialNote}</p>}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900">設備機號：{m.machineNo}</p>
-                          {m.specialNote && (
-                            <p className="text-xs text-gray-400 truncate">{m.specialNote}</p>
-                          )}
+                        <div className="flex gap-1.5">
+                          {(['已完成', '待處理', '未完成'] as const).map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => setStatus(s)}
+                              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                status === s
+                                  ? s === '已完成' ? 'bg-green-500 text-white'
+                                  : s === '待處理' ? 'bg-amber-400 text-white'
+                                  : 'bg-red-400 text-white'
+                                  : 'bg-white text-gray-400 border border-gray-200'
+                              }`}
+                            >{s}</button>
+                          ))}
                         </div>
-                        {m.needsService && (
-                          <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">待處理</span>
+                        {status === '未完成' && (
+                          <input
+                            value={reason}
+                            onChange={(e) => setMachineReasons((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                            placeholder="未完成原因"
+                            className="mt-2 w-full border border-red-100 bg-white rounded-lg px-3 py-2 text-xs text-gray-700 outline-none focus:border-red-300"
+                          />
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -983,31 +987,11 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
           </div>
         ))}
 
-        <div className="flex items-center justify-between text-xs text-gray-400 mb-4 px-1">
-          <span>已選 {completeMachineIds.length} 台</span>
-          <button
-            onClick={() =>
-              setCompleteMachineIds(
-                completeMachineIds.length === allBuildingMachines.length
-                  ? []
-                  : allBuildingMachines.map((x) => x.machine.id)
-              )
-            }
-            className="text-blue-500 font-medium"
-          >
-            {completeMachineIds.length === allBuildingMachines.length ? '取消全選' : '全選'}
-          </button>
-        </div>
-
         <button
-          disabled={completeMachineIds.length === 0}
-          onClick={() => {
-            setConfirmedDoneIds(completeMachineIds);
-            setSheet('none');
-          }}
-          className="w-full py-3.5 rounded-xl text-sm font-semibold transition-colors disabled:bg-gray-100 disabled:text-gray-400 enabled:bg-gray-900 enabled:text-white"
+          onClick={() => setSheet('none')}
+          className="w-full py-3.5 rounded-xl text-sm font-semibold bg-gray-900 text-white mt-2"
         >
-          確認完成（{completeMachineIds.length} 台）
+          確認
         </button>
       </BottomSheet>
     </>
