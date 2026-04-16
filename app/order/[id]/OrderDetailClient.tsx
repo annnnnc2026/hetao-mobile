@@ -131,12 +131,12 @@ function BottomSheet({ open, title, onClose, children }: {
   return (
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 max-w-md mx-auto">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 max-w-md mx-auto flex flex-col max-h-[80vh]">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
           <h3 className="text-base font-bold text-gray-900">{title}</h3>
           <button onClick={onClose} className="text-gray-400"><X className="w-5 h-5" /></button>
         </div>
-        <div className="px-5 pb-8">{children}</div>
+        <div className="px-5 pb-8 overflow-y-auto">{children}</div>
       </div>
     </>
   );
@@ -844,7 +844,16 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             轉派
           </button>
           <button
-            onClick={() => { setMachineStatuses(Object.fromEntries(allBuildingMachines.map((x) => [x.machine.id, '已完成' as const]))); setSheet('complete'); }}
+            onClick={() => {
+  const ids = allBuildingMachines.map((x) => x.machine.id);
+  const statuses = Object.fromEntries(ids.map((id, i) => {
+    const r = i / ids.length;
+    const s: '已完成' | '待處理' | '未完成' = r < 0.4 ? '已完成' : r < 0.7 ? '待處理' : '未完成';
+    return [id, s];
+  }));
+  setMachineStatuses(statuses);
+  setSheet('complete');
+}}
             className="flex-[2] py-3.5 rounded-2xl bg-green-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5"
           >
             <CheckCircle2 className="w-4 h-4" />
@@ -870,7 +879,16 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-blue-700 font-medium">{order.address}</p>
               </div>
               <button
-                onClick={() => { setMachineStatuses(Object.fromEntries(allBuildingMachines.map((x) => [x.machine.id, '已完成' as const]))); setSheet('complete'); }}
+                onClick={() => {
+  const ids = allBuildingMachines.map((x) => x.machine.id);
+  const statuses = Object.fromEntries(ids.map((id, i) => {
+    const r = i / ids.length;
+    const s: '已完成' | '待處理' | '未完成' = r < 0.4 ? '已完成' : r < 0.7 ? '待處理' : '未完成';
+    return [id, s];
+  }));
+  setMachineStatuses(statuses);
+  setSheet('complete');
+}}
                 className="w-full py-3.5 rounded-xl text-sm font-semibold bg-green-500 text-white flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
