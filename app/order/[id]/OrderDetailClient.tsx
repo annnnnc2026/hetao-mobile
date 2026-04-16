@@ -276,7 +276,16 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
   // Complete sheet — per-machine status
   type MachineStatus = '已完成' | '待處理' | '未完成';
-  const [machineStatuses, setMachineStatuses] = useState<Record<string, MachineStatus>>({});
+  const [machineStatuses, setMachineStatuses] = useState<Record<string, MachineStatus>>(() => {
+    const ids = (order.machineBuildings ?? []).flatMap((b) =>
+      b.floors.flatMap((f) => (f.machines ?? []).map((m) => m.id))
+    );
+    return Object.fromEntries(ids.map((id, i) => {
+      const r = i / ids.length;
+      const s: MachineStatus = r < 0.4 ? '已完成' : r < 0.7 ? '待處理' : '未完成';
+      return [id, s];
+    }));
+  });
   const [machineReasons, setMachineReasons] = useState<Record<string, string>>({});
 
   // Delivery tab
@@ -844,16 +853,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             轉派
           </button>
           <button
-            onClick={() => {
-  const ids = allBuildingMachines.map((x) => x.machine.id);
-  const statuses = Object.fromEntries(ids.map((id, i) => {
-    const r = i / ids.length;
-    const s: '已完成' | '待處理' | '未完成' = r < 0.4 ? '已完成' : r < 0.7 ? '待處理' : '未完成';
-    return [id, s];
-  }));
-  setMachineStatuses(statuses);
-  setSheet('complete');
-}}
+            onClick={() => setSheet('complete')}
             className="flex-[2] py-3.5 rounded-2xl bg-green-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5"
           >
             <CheckCircle2 className="w-4 h-4" />
@@ -879,16 +879,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-blue-700 font-medium">{order.address}</p>
               </div>
               <button
-                onClick={() => {
-  const ids = allBuildingMachines.map((x) => x.machine.id);
-  const statuses = Object.fromEntries(ids.map((id, i) => {
-    const r = i / ids.length;
-    const s: '已完成' | '待處理' | '未完成' = r < 0.4 ? '已完成' : r < 0.7 ? '待處理' : '未完成';
-    return [id, s];
-  }));
-  setMachineStatuses(statuses);
-  setSheet('complete');
-}}
+                onClick={() => setSheet('complete')}
                 className="w-full py-3.5 rounded-xl text-sm font-semibold bg-green-500 text-white flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
