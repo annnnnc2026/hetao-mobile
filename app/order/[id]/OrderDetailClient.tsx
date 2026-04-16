@@ -284,7 +284,8 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);
   const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
   // Payment pill (single select)
-  const [deliveryPayment, setDeliveryPayment] = useState<'現金' | '刷卡' | 'LINE Pay' | '支票'>('現金');
+  const [deliveryPayment, setDeliveryPayment] = useState<'現金' | '刷卡' | 'LINE Pay' | '支票'>('刷卡');
+  const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false);
   const [chequeNo, setChequeNo] = useState('');
   const [chequeExpiry, setChequeExpiry] = useState({ y: '', m: '', d: '' });
   // 未收
@@ -599,26 +600,36 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
                 {/* 3. 付款方式 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
-                  <h3 className="text-base font-bold text-gray-900 mb-3">付款方式</h3>
-
-                  {/* Pill 單選 */}
-                  <div className="flex gap-2 flex-wrap mb-4">
-                    {(['現金', '刷卡', 'LINE Pay', '支票'] as const).map((m) => (
-                      <button
-                        key={m}
-                        onClick={() => setDeliveryPayment(m)}
-                        className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors border ${
-                          deliveryPayment === m
-                            ? 'bg-gray-900 text-white border-gray-900'
-                            : 'bg-white text-gray-600 border-gray-200'
-                        }`}
-                      >{m}</button>
-                    ))}
+                  {/* 標題 + 下拉選單 */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold text-gray-900">付款方式</h3>
+                    <button
+                      onClick={() => setDeliveryPaymentOpen((v) => !v)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-700"
+                    >
+                      {deliveryPayment}
+                      <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform ${deliveryPaymentOpen ? 'rotate-180' : ''}`} />
+                    </button>
                   </div>
+
+                  {/* 展開選項 */}
+                  {deliveryPaymentOpen && (
+                    <div className="flex gap-2 flex-wrap mb-3">
+                      {(['現金', '刷卡', 'LINE Pay', '支票'] as const).map((m) => (
+                        <button
+                          key={m}
+                          onClick={() => { setDeliveryPayment(m); setDeliveryPaymentOpen(false); }}
+                          className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                            deliveryPayment === m ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200'
+                          }`}
+                        >{m}</button>
+                      ))}
+                    </div>
+                  )}
 
                   {/* 支票詳細 */}
                   {deliveryPayment === '支票' && (
-                    <div className="flex flex-col gap-2 mb-4 bg-gray-50 rounded-xl px-3 py-3">
+                    <div className="flex flex-col gap-2 mb-3 bg-gray-50 rounded-xl px-3 py-3">
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-gray-400 shrink-0">號碼</span>
                         <input value={chequeNo} onChange={(e) => setChequeNo(e.target.value)} placeholder="填寫支票號碼" className="flex-1 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none px-1 py-0.5" />
@@ -636,42 +647,54 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   )}
 
                   <div className="flex flex-col gap-3 border-t border-gray-50 pt-3">
-                    {/* 未收 */}
+                    {/* 未收款 */}
                     <div>
+                      <p className="text-xs text-gray-400 mb-2">未收款</p>
                       <button
                         onClick={() => setPayUnpaid((v) => !v)}
-                        className={`text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${payUnpaid ? 'bg-amber-50 text-amber-600 border-amber-200' : 'bg-white text-gray-600 border-gray-200'}`}
-                      >未收</button>
-                      {payUnpaid && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-400 pl-1">
-                          <span className="shrink-0">預計收款</span>
-                          <input value={unpaidDate.y} onChange={(e) => setUnpaidDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>年</span>
-                          <input value={unpaidDate.m} onChange={(e) => setUnpaidDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>月</span>
-                          <input value={unpaidDate.d} onChange={(e) => setUnpaidDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>日</span>
+                        className="w-full text-left"
+                      >
+                        <div className={`rounded-xl px-4 py-3 transition-colors ${payUnpaid ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                          <p className={`text-xs mb-1 ${payUnpaid ? 'text-blue-400' : 'text-gray-400'}`}>預計收款日期</p>
+                          {payUnpaid ? (
+                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <input value={unpaidDate.y} onChange={(e) => setUnpaidDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
+                              <span className="text-sm text-blue-400">年</span>
+                              <input value={unpaidDate.m} onChange={(e) => setUnpaidDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
+                              <span className="text-sm text-blue-400">月</span>
+                              <input value={unpaidDate.d} onChange={(e) => setUnpaidDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
+                              <span className="text-sm text-blue-400">日</span>
+                            </div>
+                          ) : (
+                            <p className="text-base font-semibold text-gray-300">點此設定日期</p>
+                          )}
                         </div>
-                      )}
+                      </button>
                     </div>
 
-                    {/* 合約，已預收 */}
+                    {/* 合約，已收款 */}
                     <div>
+                      <p className="text-xs text-gray-400 mb-2">合約，已收款</p>
                       <button
                         onClick={() => setPayContract((v) => !v)}
-                        className={`text-sm font-medium px-3 py-1.5 rounded-full border transition-colors ${payContract ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-600 border-gray-200'}`}
-                      >合約，已預收</button>
-                      {payContract && (
-                        <div className="mt-2 flex items-center gap-1.5 text-xs text-gray-400 pl-1">
-                          <span className="shrink-0">已預收日期</span>
-                          <input value={contractDate.y} onChange={(e) => setContractDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>年</span>
-                          <input value={contractDate.m} onChange={(e) => setContractDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>月</span>
-                          <input value={contractDate.d} onChange={(e) => setContractDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-gray-200 text-sm text-gray-800 outline-none text-center" />
-                          <span>日</span>
+                        className="w-full text-left"
+                      >
+                        <div className={`rounded-xl px-4 py-3 transition-colors ${payContract ? 'bg-blue-50' : 'bg-gray-50'}`}>
+                          <p className={`text-xs mb-1 ${payContract ? 'text-blue-400' : 'text-gray-400'}`}>已收款日期</p>
+                          {payContract ? (
+                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                              <input value={contractDate.y} onChange={(e) => setContractDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
+                              <span className="text-sm text-blue-400">年</span>
+                              <input value={contractDate.m} onChange={(e) => setContractDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
+                              <span className="text-sm text-blue-400">月</span>
+                              <input value={contractDate.d} onChange={(e) => setContractDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
+                              <span className="text-sm text-blue-400">日</span>
+                            </div>
+                          ) : (
+                            <p className="text-base font-semibold text-gray-300">點此設定日期</p>
+                          )}
                         </div>
-                      )}
+                      </button>
                     </div>
 
                     {/* 開立發票 */}
