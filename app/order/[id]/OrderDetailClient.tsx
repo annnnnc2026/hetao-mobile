@@ -295,6 +295,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const [unpaidMethod, setUnpaidMethod] = useState<'到收' | '電匯' | '郵遞' | ''>('');
   const [payContract, setPayContract] = useState(false);
   const [issueInvoice, setIssueInvoice] = useState(false);
+  const [invoiceNo, setInvoiceNo] = useState('');
   // Extra items (加購)
   const [extraItems, setExtraItems] = useState<{ name: string; qty: number; price: number }[]>([]);
   const [addingItem, setAddingItem] = useState(false);
@@ -680,14 +681,24 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                     </label>
 
                     {/* 開立發票 */}
-                    <div className="border-t border-gray-50 pt-3 flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700">開立發票</span>
-                      <button
-                        onClick={() => setIssueInvoice((v) => !v)}
-                        className={`w-12 h-6 rounded-full transition-colors relative ${issueInvoice ? 'bg-blue-500' : 'bg-gray-200'}`}
-                      >
-                        <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${issueInvoice ? 'left-6' : 'left-0.5'}`} />
-                      </button>
+                    <div className="border-t border-gray-50 pt-3 flex flex-col gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">開立發票</span>
+                        <button
+                          onClick={() => setIssueInvoice((v) => !v)}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${issueInvoice ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        >
+                          <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${issueInvoice ? 'left-6' : 'left-0.5'}`} />
+                        </button>
+                      </div>
+                      {issueInvoice && (
+                        <input
+                          value={invoiceNo}
+                          onChange={(e) => setInvoiceNo(e.target.value)}
+                          placeholder="發票號碼"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
