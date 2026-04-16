@@ -288,9 +288,6 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false);
   const [chequeNo, setChequeNo] = useState('');
   const [chequeExpiry, setChequeExpiry] = useState({ y: '', m: '', d: '' });
-  // 合約，已預收
-  const [payContract, setPayContract] = useState(false);
-  const [contractDate, setContractDate] = useState({ y: '', m: '', d: '' });
   // 開立發票
   const [issueInvoice, setIssueInvoice] = useState(false);
   const [invoiceNo, setInvoiceNo] = useState('');
@@ -644,29 +641,13 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   )}
 
                   <div className="flex flex-col gap-3 border-t border-gray-50 pt-3">
-                    {/* 已收款 */}
+                    {/* 已收款（純顯示） */}
                     <div>
                       <p className="text-xs text-gray-400 mb-2">已收款</p>
-                      <button
-                        onClick={() => setPayContract((v) => !v)}
-                        className="w-full text-left"
-                      >
-                        <div className={`rounded-xl px-4 py-3 transition-colors ${payContract ? 'bg-blue-50' : 'bg-gray-50'}`}>
-                          <p className={`text-xs mb-1 ${payContract ? 'text-blue-400' : 'text-gray-400'}`}>已收款日期</p>
-                          {payContract ? (
-                            <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-                              <input value={contractDate.y} onChange={(e) => setContractDate((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
-                              <span className="text-sm text-blue-400">年</span>
-                              <input value={contractDate.m} onChange={(e) => setContractDate((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
-                              <span className="text-sm text-blue-400">月</span>
-                              <input value={contractDate.d} onChange={(e) => setContractDate((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-blue-200 bg-transparent text-base font-semibold text-blue-600 outline-none text-center" />
-                              <span className="text-sm text-blue-400">日</span>
-                            </div>
-                          ) : (
-                            <p className="text-base font-semibold text-gray-300">點此設定日期</p>
-                          )}
-                        </div>
-                      </button>
+                      <div className="bg-blue-50 rounded-xl px-4 py-3">
+                        <p className="text-xs text-blue-400 mb-1">已收款日期</p>
+                        <p className="text-base font-semibold text-blue-600">115 年 3 月 12 日</p>
+                      </div>
                     </div>
 
                     {/* 開立發票 */}
