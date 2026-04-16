@@ -302,12 +302,6 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const [newItemName, setNewItemName] = useState('');
   const [newItemQty, setNewItemQty] = useState('1');
   const [newItemPrice, setNewItemPrice] = useState('');
-  // Extra items (加購)
-  const [extraItems, setExtraItems] = useState<{ name: string; qty: number; price: number }[]>([]);
-  const [addingItem, setAddingItem] = useState(false);
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemQty, setNewItemQty] = useState('1');
-  const [newItemPrice, setNewItemPrice] = useState('');
 
   // All machines across all buildings (for stats + complete sheet)
   const allBuildingMachines = buildings.flatMap((b) =>
