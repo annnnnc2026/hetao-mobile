@@ -39,14 +39,14 @@ const STATUS_STYLE: Record<HistoryStatus, { dot: string; text: string; label: st
 type PartsStatus = '已用料' | '待用料';
 
 const PARTS_HISTORY: {
-  date: string; name: string; qty: number; unit: string; status: PartsStatus;
+  date: string; materialNo: string; name: string; qty: number; unit: string; status: PartsStatus;
 }[] = [
-  { date: '2026-03-04', name: '活性碳濾芯 (CTO)',  qty: 1, unit: '支', status: '待用料' },
-  { date: '2026-01-15', name: '出水閥',             qty: 1, unit: '個', status: '已用料' },
-  { date: '2026-01-15', name: '止水墊片',           qty: 2, unit: '片', status: '已用料' },
-  { date: '2025-11-20', name: 'PP 纖維濾芯 5u',    qty: 1, unit: '支', status: '已用料' },
-  { date: '2025-08-10', name: 'RO 逆滲透膜 75G',   qty: 1, unit: '支', status: '已用料' },
-  { date: '2025-02-18', name: 'UF 中空絲濾芯',     qty: 1, unit: '支', status: '已用料' },
+  { date: '2026-03-04', materialNo: 'F-CTO',   name: '活性碳濾芯 (CTO)', qty: 1, unit: '支', status: '待用料' },
+  { date: '2026-01-15', materialNo: 'P-OV',    name: '出水閥',           qty: 1, unit: '個', status: '已用料' },
+  { date: '2026-01-15', materialNo: 'P-WS',    name: '止水墊片',         qty: 2, unit: '片', status: '已用料' },
+  { date: '2025-11-20', materialNo: 'F-PP5',   name: 'PP 纖維濾芯 5u',  qty: 1, unit: '支', status: '已用料' },
+  { date: '2025-08-10', materialNo: 'F-RO75',  name: 'RO 逆滲透膜 75G', qty: 1, unit: '支', status: '已用料' },
+  { date: '2025-02-18', materialNo: 'UF-591',  name: 'UF 中空絲濾芯',   qty: 1, unit: '支', status: '已用料' },
 ];
 
 // ─── Info field ───────────────────────────────────────────────────────────────
@@ -131,12 +131,12 @@ function BottomSheet({ open, title, onClose, children }: {
   return (
     <>
       <div className="fixed inset-0 bg-black/30 z-40" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 max-w-md mx-auto">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 max-w-md mx-auto flex flex-col max-h-[80vh]">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 shrink-0">
           <h3 className="text-base font-bold text-gray-900">{title}</h3>
           <button onClick={onClose} className="text-gray-400"><X className="w-5 h-5" /></button>
         </div>
-        <div className="px-5 pb-8">{children}</div>
+        <div className="px-5 pb-8 overflow-y-auto">{children}</div>
       </div>
     </>
   );
@@ -204,7 +204,7 @@ function MachineSelector({
         onClick={() => setOpen((v) => !v)}
         className="w-full flex items-center justify-between px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 shadow-sm"
       >
-        <span>{current?.machineNo ?? '選擇機器'}</span>
+        <span>{current ? `設備機號：${current.machineNo}` : '選擇機器'}</span>
         <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
 
@@ -224,11 +224,11 @@ function MachineSelector({
                 >
                   <div className="min-w-0">
                     <p className={`text-sm font-semibold ${isActive ? 'text-blue-600' : 'text-gray-900'}`}>
-                      {m.machineNo}
+                      設備機號：{m.machineNo}
                     </p>
-                    <p className="text-xs text-gray-400 truncate">
-                      {m.modelNumber}{m.specialNote ? ` · ${m.specialNote}` : ''}
-                    </p>
+                    {m.specialNote && (
+                      <p className="text-xs text-gray-400 truncate">{m.specialNote}</p>
+                    )}
                   </div>
                   {m.needsService && (
                     <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full ml-2">待處理</span>
@@ -274,18 +274,37 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const [transferReason, setTransferReason] = useState('');
   const [transferNote, setTransferNote] = useState('');
 
-  // Complete form — machine checkboxes
-  // Pre-confirmed done machines (mock: A棟 1F 全3台已完工，today done=3)
-  const [confirmedDoneIds, setConfirmedDoneIds] = useState<string[]>(['A1-M1', 'A1-M2', 'A1-M3']);
-  // Sheet-internal selection (initialised when sheet opens)
-  const [completeMachineIds, setCompleteMachineIds] = useState<string[]>([]);
+  // Complete sheet — per-machine status
+  type MachineStatus = '已完成' | '待處理' | '未完成';
+  const [machineStatuses, setMachineStatuses] = useState<Record<string, MachineStatus>>(() => {
+    const ids = (order.machineBuildings ?? []).flatMap((b) =>
+      b.floors.flatMap((f) => (f.machines ?? []).map((m) => m.id))
+    );
+    return Object.fromEntries(ids.map((id, i) => {
+      const r = i / ids.length;
+      const s: MachineStatus = r < 0.4 ? '已完成' : r < 0.7 ? '待處理' : '未完成';
+      return [id, s];
+    }));
+  });
+  const [machineReasons, setMachineReasons] = useState<Record<string, string>>({});
 
   // Delivery tab
-  const [deliveryPayment, setDeliveryPayment] = useState('現金');
-  const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);      // 基本資料預設收起
-  const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false); // 付款方式展開
+  const [deliveryInfoOpen, setDeliveryInfoOpen] = useState(false);
   const today = new Date().toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' });
-  const [prepaidDate, setPrepaidDate] = useState('2026 年 03 月 15 日');
+  // Payment pill (single select)
+  const [deliveryPayment, setDeliveryPayment] = useState<'現金' | '刷卡' | 'LINE Pay' | '支票'>('刷卡');
+  const [deliveryPaymentOpen, setDeliveryPaymentOpen] = useState(false);
+  const [chequeNo, setChequeNo] = useState('');
+  const [chequeExpiry, setChequeExpiry] = useState({ y: '', m: '', d: '' });
+  // 開立發票
+  const [issueInvoice, setIssueInvoice] = useState(false);
+  const [invoiceNo, setInvoiceNo] = useState('');
+  // Extra items (加購)
+  const [extraItems, setExtraItems] = useState<{ name: string; qty: number; price: number }[]>([]);
+  const [addingItem, setAddingItem] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemQty, setNewItemQty] = useState('1');
+  const [newItemPrice, setNewItemPrice] = useState('');
 
   // All machines across all buildings (for stats + complete sheet)
   const allBuildingMachines = buildings.flatMap((b) =>
@@ -295,9 +314,10 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(order.address)}`;
   const duration = order.durationHours === 0.5 ? '0.5 小時' : `${order.durationHours} 小時`;
 
-  // Machine-level values: prefer selected floor, fall back to order-level
-  const machineNo = selectedFloor?.machineNo ?? order.erpNo;
-  const modelNumber = selectedFloor?.modelNumber ?? order.modelNumber;
+  // Machine-level values: prefer selected machine → floor → order
+  const selectedMachine = floorMachines.find((m) => m.id === selectedMachineId) ?? floorMachines[0] ?? null;
+  const machineNo = selectedMachine?.machineNo ?? selectedFloor?.machineNo ?? order.erpNo;
+  const modelNumber = selectedMachine?.modelNumber ?? selectedFloor?.modelNumber ?? order.modelNumber;
   const workDescription = selectedFloor?.workDescription ?? order.workDescription;
   const specialNote = selectedFloor?.specialNote ?? order.specialNote;
 
@@ -348,8 +368,9 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
             {/* ─── 統計概覽 ─── */}
             {(() => {
-              const totalMachines = allBuildingMachines.length || buildings.flatMap((b) => b.floors).length || 5;
-              const todayDone = confirmedDoneIds.length;
+              const hasMachineBuildings = allBuildingMachines.length > 0;
+              const totalMachines = hasMachineBuildings ? allBuildingMachines.length : order.deviceCount;
+              const todayDone = hasMachineBuildings ? Object.values(machineStatuses).filter((s) => s === '已完成').length : 0;
               const todayPending = Math.max(0, totalMachines - todayDone);
               return (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4">
@@ -459,7 +480,6 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
               <>
                 {/* 基本資訊 + 派工資訊（合併） */}
                 <Section title="基本資訊">
-                  <InfoField icon={Building2}   label="機號"     value={order.erpNo} />
                   <InfoField icon={CalendarDays} label="派工日期" value={order.date} />
                   <InfoField icon={Tag}          label="派工類型" value={order.serviceType} />
                   <InfoField icon={AlertCircle}  label="優先度"   value={order.priority ?? '一般'} />
@@ -551,7 +571,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                       <InfoField icon={MapPin}       label="收款地址"        value={order.address} fullWidth />
                       <InfoField icon={Hash}         label="統編"            value="39503759" />
                       <InfoField icon={CalendarDays} label="日期"            value={order.date} />
-                      <InfoField icon={QrCode}       label="客戶卡號（機號）" value={order.cardNo} fullWidth />
+                      <InfoField icon={QrCode}       label="設備機號" value={order.erpNo} fullWidth />
                     </div>
                   )}
                 </div>
@@ -582,7 +602,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
                 {/* 3. 付款方式 */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
-                  {/* 標題列：選中方式 + 展開 icon */}
+                  {/* 標題 + 下拉選單 */}
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-base font-bold text-gray-900">付款方式</h3>
                     <button
@@ -594,41 +614,141 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                     </button>
                   </div>
 
-                  {/* 展開：其他選項 */}
+                  {/* 展開選項 */}
                   {deliveryPaymentOpen && (
-                    <div className="flex gap-2 mb-3 flex-wrap">
-                      {['現金', '刷卡', 'Line Pay', '支票'].map((m) => (
+                    <div className="flex gap-2 flex-wrap mb-3">
+                      {(['現金', '刷卡', 'LINE Pay', '支票'] as const).map((m) => (
                         <button
                           key={m}
                           onClick={() => { setDeliveryPayment(m); setDeliveryPaymentOpen(false); }}
-                          className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                            deliveryPayment === m
-                              ? 'bg-gray-900 text-white'
-                              : 'bg-white text-gray-600 border border-gray-200'
+                          className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                            deliveryPayment === m ? 'bg-gray-900 text-white border-gray-900' : 'bg-white text-gray-600 border-gray-200'
                           }`}
-                        >
-                          {m}
-                        </button>
+                        >{m}</button>
                       ))}
                     </div>
                   )}
 
-                  {/* 已預收 */}
-                  <div className="border-t border-gray-50 pt-3">
-                    <p className="text-xs text-gray-400 mb-2">已預收</p>
-                    <div className="bg-blue-50 rounded-xl px-4 py-3">
-                      <p className="text-xs text-blue-400 mb-1">已預收日期</p>
-                      <div className="flex items-center justify-between">
-                        <p className="text-base font-semibold text-blue-600">{prepaidDate}</p>
-                        <button
-                          onClick={() => setPrepaidDate(today)}
-                          className="text-xs font-semibold text-blue-500 bg-white px-2.5 py-1 rounded-lg border border-blue-100"
-                        >
-                          本日
-                        </button>
+                  {/* 支票詳細 */}
+                  {deliveryPayment === '支票' && (
+                    <div className="flex flex-col gap-2 mb-3 bg-gray-50 rounded-xl px-3 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-400 shrink-0">號碼</span>
+                        <input value={chequeNo} onChange={(e) => setChequeNo(e.target.value)} placeholder="填寫支票號碼" className="flex-1 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none px-1 py-0.5" />
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <span className="shrink-0">到期</span>
+                        <input value={chequeExpiry.y} onChange={(e) => setChequeExpiry((v) => ({ ...v, y: e.target.value }))} placeholder="年" className="w-14 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none text-center" />
+                        <span>年</span>
+                        <input value={chequeExpiry.m} onChange={(e) => setChequeExpiry((v) => ({ ...v, m: e.target.value }))} placeholder="月" className="w-9 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none text-center" />
+                        <span>月</span>
+                        <input value={chequeExpiry.d} onChange={(e) => setChequeExpiry((v) => ({ ...v, d: e.target.value }))} placeholder="日" className="w-9 border-b border-gray-200 bg-transparent text-sm text-gray-800 outline-none text-center" />
+                        <span>日</span>
                       </div>
                     </div>
+                  )}
+
+                  <div className="flex flex-col gap-3 border-t border-gray-50 pt-3">
+                    {/* 已收款（純顯示） */}
+                    <div>
+                      <p className="text-xs text-gray-400 mb-2">已收款</p>
+                      <div className="bg-blue-50 rounded-xl px-4 py-3">
+                        <p className="text-xs text-blue-400 mb-1">已收款日期</p>
+                        <p className="text-base font-semibold text-blue-600">115 年 3 月 12 日</p>
+                      </div>
+                    </div>
+
+                    {/* 開立發票 */}
+                    <div className="flex flex-col gap-2 border-t border-gray-50 pt-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">開立發票</span>
+                        <button
+                          onClick={() => setIssueInvoice((v) => !v)}
+                          className={`w-12 h-6 rounded-full transition-colors relative ${issueInvoice ? 'bg-blue-500' : 'bg-gray-200'}`}
+                        >
+                          <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${issueInvoice ? 'left-6' : 'left-0.5'}`} />
+                        </button>
+                      </div>
+                      {issueInvoice && (
+                        <input
+                          value={invoiceNo}
+                          onChange={(e) => setInvoiceNo(e.target.value)}
+                          placeholder="發票號碼"
+                          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                        />
+                      )}
+                    </div>
                   </div>
+                </div>
+
+                {/* 新增收費項目 */}
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-bold text-gray-900">加購項目</h3>
+                    <button
+                      onClick={() => setAddingItem(true)}
+                      className="text-xs font-semibold text-blue-500 bg-blue-50 px-3 py-1.5 rounded-xl"
+                    >＋ 新增</button>
+                  </div>
+
+                  {extraItems.length === 0 && !addingItem && (
+                    <p className="text-sm text-gray-300 text-center py-3">尚無加購項目</p>
+                  )}
+
+                  {extraItems.map((item, i) => (
+                    <div key={i} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-gray-900">{item.name}</p>
+                        <p className="text-xs text-gray-400">數量 {item.qty}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-semibold text-gray-900">${(item.qty * item.price).toLocaleString()}</span>
+                        <button onClick={() => setExtraItems((v) => v.filter((_, j) => j !== i))} className="text-gray-300 text-lg leading-none">×</button>
+                      </div>
+                    </div>
+                  ))}
+
+                  {addingItem && (
+                    <div className="mt-2 flex flex-col gap-2">
+                      <input
+                        placeholder="品名"
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                      />
+                      <div className="flex gap-2">
+                        <input
+                          placeholder="數量"
+                          type="number"
+                          value={newItemQty}
+                          onChange={(e) => setNewItemQty(e.target.value)}
+                          className="w-20 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                        />
+                        <input
+                          placeholder="單價"
+                          type="number"
+                          value={newItemPrice}
+                          onChange={(e) => setNewItemPrice(e.target.value)}
+                          className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-800 outline-none focus:border-blue-400"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { setAddingItem(false); setNewItemName(''); setNewItemQty('1'); setNewItemPrice(''); }}
+                          className="flex-1 py-2 rounded-xl border border-gray-200 text-sm font-medium text-gray-500"
+                        >取消</button>
+                        <button
+                          onClick={() => {
+                            if (newItemName && newItemPrice) {
+                              setExtraItems((v) => [...v, { name: newItemName, qty: Number(newItemQty) || 1, price: Number(newItemPrice) }]);
+                              setAddingItem(false); setNewItemName(''); setNewItemQty('1'); setNewItemPrice('');
+                            }
+                          }}
+                          className="flex-1 py-2 rounded-xl bg-blue-500 text-white text-sm font-semibold"
+                        >確認</button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* 4. 備註 */}
@@ -657,25 +777,26 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                   <Package className="w-4 h-4 text-gray-400" />
                   <h3 className="text-base font-bold text-gray-900">用料紀錄</h3>
                 </div>
-                <div className="flex flex-col gap-0">
+                <div className="flex flex-col gap-3">
                   {[...PARTS_HISTORY].sort((a, b) => b.date.localeCompare(a.date)).map((p, i, arr) => (
-                    <div key={i} className="flex items-start gap-3 pb-3 last:pb-0">
+                    <div key={i} className="flex items-start gap-3 pb-3 border-b border-gray-50 last:border-0 last:pb-0">
+                      {/* 時間軸：圓點 + 豎線 */}
                       <div className="flex flex-col items-center pt-1.5">
                         <div className={`w-2 h-2 rounded-full shrink-0 ${p.status === '已用料' ? 'bg-green-400' : 'bg-amber-400'}`} />
                         {i < arr.length - 1 && (
-                          <div className="w-px flex-1 bg-gray-100 mt-1.5 min-h-[24px]" />
+                          <div className="w-px flex-1 bg-gray-100 mt-1.5 min-h-[20px]" />
                         )}
                       </div>
-                      <div className="flex-1 min-w-0 pb-3 border-b border-gray-50 last:border-0">
+                      {/* 內容 */}
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-0.5">
                           <span className="text-xs text-gray-400">{p.date}</span>
                           <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
-                            p.status === '已用料'
-                              ? 'bg-green-50 text-green-600'
-                              : 'bg-amber-50 text-amber-600'
+                            p.status === '已用料' ? 'bg-green-50 text-green-600' : 'bg-amber-50 text-amber-600'
                           }`}>{p.status}</span>
                         </div>
-                        <p className="text-sm text-gray-800">{p.name}</p>
+                        <p className="text-[11px] text-gray-400">{p.materialNo}</p>
+                        <p className="text-sm text-gray-800 leading-snug">{p.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5">數量：{p.qty} {p.unit}</p>
                       </div>
                     </div>
@@ -732,7 +853,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
             轉派
           </button>
           <button
-            onClick={() => { setCompleteMachineIds(allBuildingMachines.map((x) => x.machine.id)); setSheet('complete'); }}
+            onClick={() => setSheet('complete')}
             className="flex-[2] py-3.5 rounded-2xl bg-green-500 text-white text-sm font-semibold flex items-center justify-center gap-1.5"
           >
             <CheckCircle2 className="w-4 h-4" />
@@ -758,7 +879,7 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 <p className="text-sm text-blue-700 font-medium">{order.address}</p>
               </div>
               <button
-                onClick={() => { setCompleteMachineIds(allBuildingMachines.map((x) => x.machine.id)); setSheet('complete'); }}
+                onClick={() => setSheet('complete')}
                 className="w-full py-3.5 rounded-xl text-sm font-semibold bg-green-500 text-white flex items-center justify-center gap-2"
               >
                 <CheckCircle2 className="w-4 h-4" />
@@ -822,9 +943,6 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
 
       {/* ─── Complete sheet ───────────────────────────────────────────── */}
       <BottomSheet open={sheet === 'complete'} title="完成工單" onClose={() => setSheet('none')}>
-        <p className="text-xs text-gray-400 mb-4">請勾選本次已完成保養的機器</p>
-
-        {/* Group by building → floor */}
         {buildings.map((b) => (
           <div key={b.id} className="mb-4">
             {b.floors.filter((f) => (f.machines ?? []).length > 0).map((f) => (
@@ -832,36 +950,44 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
                 <p className="text-xs font-semibold text-gray-400 mb-2 px-1">
                   {b.name} · {f.label}
                 </p>
-                <div className="rounded-xl overflow-hidden border border-gray-100">
-                  {(f.machines ?? []).map((m, idx, arr) => {
-                    const checked = completeMachineIds.includes(m.id);
+                <div className="flex flex-col gap-2">
+                  {(f.machines ?? []).map((m) => {
+                    const status = machineStatuses[m.id] ?? '已完成';
+                    const reason = machineReasons[m.id] ?? '';
+                    const setStatus = (s: '已完成' | '待處理' | '未完成') =>
+                      setMachineStatuses((prev) => ({ ...prev, [m.id]: s }));
                     return (
-                      <button
-                        key={m.id}
-                        onClick={() =>
-                          setCompleteMachineIds((prev) =>
-                            checked ? prev.filter((x) => x !== m.id) : [...prev, m.id]
-                          )
-                        }
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
-                          idx < arr.length - 1 ? 'border-b border-gray-50' : ''
-                        } ${checked ? 'bg-green-50' : 'bg-white'}`}
-                      >
-                        <div className={`w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-                          checked ? 'bg-green-500 border-green-500' : 'border-gray-300'
-                        }`}>
-                          {checked && <Check className="w-3 h-3 text-white" />}
+                      <div key={m.id} className="bg-gray-50 rounded-xl px-4 py-3">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900">設備機號：{m.machineNo}</p>
+                            {m.specialNote && <p className="text-xs text-gray-400 truncate">{m.specialNote}</p>}
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900">{m.machineNo}</p>
-                          <p className="text-xs text-gray-400 truncate">
-                            {m.modelNumber}{m.specialNote ? ` · ${m.specialNote}` : ''}
-                          </p>
+                        <div className="flex gap-1.5">
+                          {(['已完成', '待處理', '未完成'] as const).map((s) => (
+                            <button
+                              key={s}
+                              onClick={() => setStatus(s)}
+                              className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                                status === s
+                                  ? s === '已完成' ? 'bg-green-500 text-white'
+                                  : s === '待處理' ? 'bg-amber-400 text-white'
+                                  : 'bg-red-400 text-white'
+                                  : 'bg-white text-gray-400 border border-gray-200'
+                              }`}
+                            >{s}</button>
+                          ))}
                         </div>
-                        {m.needsService && (
-                          <span className="shrink-0 text-xs font-medium text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">待處理</span>
+                        {status === '未完成' && (
+                          <input
+                            value={reason}
+                            onChange={(e) => setMachineReasons((prev) => ({ ...prev, [m.id]: e.target.value }))}
+                            placeholder="未完成原因"
+                            className="mt-2 w-full border border-red-100 bg-white rounded-lg px-3 py-2 text-xs text-gray-700 outline-none focus:border-red-300"
+                          />
                         )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -870,31 +996,11 @@ export default function OrderDetailClient({ params }: { params: Promise<{ id: st
           </div>
         ))}
 
-        <div className="flex items-center justify-between text-xs text-gray-400 mb-4 px-1">
-          <span>已選 {completeMachineIds.length} 台</span>
-          <button
-            onClick={() =>
-              setCompleteMachineIds(
-                completeMachineIds.length === allBuildingMachines.length
-                  ? []
-                  : allBuildingMachines.map((x) => x.machine.id)
-              )
-            }
-            className="text-blue-500 font-medium"
-          >
-            {completeMachineIds.length === allBuildingMachines.length ? '取消全選' : '全選'}
-          </button>
-        </div>
-
         <button
-          disabled={completeMachineIds.length === 0}
-          onClick={() => {
-            setConfirmedDoneIds(completeMachineIds);
-            setSheet('none');
-          }}
-          className="w-full py-3.5 rounded-xl text-sm font-semibold transition-colors disabled:bg-gray-100 disabled:text-gray-400 enabled:bg-gray-900 enabled:text-white"
+          onClick={() => setSheet('none')}
+          className="w-full py-3.5 rounded-xl text-sm font-semibold bg-gray-900 text-white mt-2"
         >
-          確認完成（{completeMachineIds.length} 台）
+          確認
         </button>
       </BottomSheet>
     </>

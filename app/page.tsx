@@ -30,7 +30,6 @@ export default function TodayPage() {
       const matchSearch =
         !q ||
         order.customerName.toLowerCase().includes(q) ||
-        order.id.toLowerCase().includes(q) ||
         order.modelNumber.toLowerCase().includes(q) ||
         order.address.toLowerCase().includes(q);
       return matchFilter && matchSearch;
